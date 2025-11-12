@@ -1,8 +1,7 @@
 ---
-
 title: "Quickstart"
 description: "Build with LLM7.io in minutes: chat, images, and more."
----------------------------------------------------------------------
+---
 
 ## Get started in three steps
 
@@ -15,11 +14,12 @@ Spin up the OpenAI SDK against the LLM7.io endpoint and make your first requests
 
 ```bash
 pip install openai
-```
+````
 
   </Accordion>
+
   <Accordion icon="key" title="Configure the client">
-    You can use LLM7.io without a key for low-volume use. For higher limits, get a free token at <a href="https://token.llm7.io/">token.llm7.io</a>.
+    You can use LLM7.io without a key for low-volume use. For higher limits, get a free token at [token.llm7.io](https://token.llm7.io/).
 
 ```python
 import openai
@@ -39,7 +39,8 @@ client = openai.OpenAI(
 
 ### Step 2: Text generation
 
-<Accordion icon="square-code" title="Chat completions (Python)">
+<AccordionGroup>
+  <Accordion icon="square-code" title="Chat completions (Python)">
 
 ```python
 import openai
@@ -59,11 +60,12 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message.content)
 ```
 
-<Tip><code>model="default"</code> is a smart router. Request a specific model later if you need strict pinning.</Tip> </Accordion>
+<Tip><code>model="default"</code> is a smart router. Pin a specific model later if needed.</Tip> </Accordion> </AccordionGroup>
 
 ### Step 3: Image generation
 
-<Accordion icon="image" title="Images API (Python)">
+<AccordionGroup>
+  <Accordion icon="image" title="Images API (Python)">
 
 ```python
 from openai import OpenAI
@@ -85,7 +87,7 @@ res = client.images.generate(
 print(f"See: {res.data[0].url}")
 ```
 
-<Tip>Responses return a CDN URL you can open in the browser or embed directly.</Tip> </Accordion>
+<Tip>Responses return a CDN URL you can open in the browser or embed directly.</Tip> </Accordion> </AccordionGroup>
 
 ## Next steps
 
@@ -118,6 +120,5 @@ print(f"See: {res.data[0].url}")
 </CardGroup>
 
 <Note>
-  **Need help?** Check the API reference above or open an issue in your docs repo.
-  Tips and examples are added regularly.
+  **Need help?** Check the API reference above or join the community.
 </Note>
