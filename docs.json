@@ -70,11 +70,6 @@
     ],
     "global": {
       "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        }
       ]
     }
   },
@@ -86,7 +81,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@llm7.io"
+        "href": "mailto:support@llm7.io?subject=LLM7%20Docs%20Support&body=Please%20describe%20your%20issue%3A%0A%0APage%3A%20"
       }
     ],
     "primary": {
