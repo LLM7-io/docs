@@ -1,0 +1,37 @@
+---
+title: "Image generation"
+description: "Generate images from prompts with flux or turbo."
+icon: "image"
+---
+
+Turn a text prompt into an image with the Images API.
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="https://api.llm7.io/v1", api_key="none")
+
+prompt = (
+    "A futuristic cityscape at sunset, flying cars, neon reflections, "
+    "cinematic cyberpunk, highly detailed"
+)
+
+res = client.images.generate(
+    model="flux",          # or "turbo" (aliases: 1, 2, image-model-1, image-model-2)
+    prompt=prompt,
+    size="1024x1024",      # or set w / h
+    extra_body={"seed": 42},
+)
+
+print(f"See: {res.data[0].url}")
+```
+
+## Parameters
+
+- `model`: `flux` (default) or `turbo`; aliases `1`/`2` also work.
+- `prompt`: text description, up to 10k characters.
+- `size`: `"WxH"`; `w` / `h` instead if you prefer numbers (100–1500 each).
+- `seed`: integer for reproducible outputs.
+- `n`: number of images (1–4).
+- `response_format`: `"url"`.
+- `nologo`: `false` by default; set `true` to suppress the watermark.
