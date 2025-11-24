@@ -24,17 +24,22 @@
           {
             "group": "Text generation",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "guides/streaming",
+              "guides/function-calling",
+              "guides/json-mode",
+              "guides/models"
             ]
           },
           {
             "group": "Image generation",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "vision/image-generation"
+            ]
+          },
+          {
+            "group": "Audio",
+            "pages": [
+              "audio/transcription"
             ]
           },
           {
