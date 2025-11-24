@@ -1,97 +1,39 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Start building with LLM7.io for text, images, and audio."
 ---
 
-## Setting up
+## Start here
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
+<Card title="Quickstart" icon="rocket" href="/quickstart" horizontal>
+  Install the SDK, configure the client, and make your first requests.
 </Card>
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Text generation
 
 <Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+  <Card title="Streaming" icon="bolt" href="/guides/streaming">
+    Stream tokens for low-latency UIs.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Function calling" icon="brackets-curly" href="/guides/function-calling">
+    Let the model call your functions with structured arguments.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="JSON mode" icon="code" href="/guides/json-mode">
+    Force valid JSON outputs for structured responses.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Available models" icon="box" href="/guides/models">
+    See model options and recommended selectors.
   </Card>
 </Columns>
 
-## Create beautiful pages
+## Image generation
 
-Everything you need to create world-class documentation.
+<Card title="Images" icon="image" href="/vision/image-generation" horizontal>
+  Generate images from prompts with flux or turbo.
+</Card>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Audio
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
+<Card title="Transcription" icon="waveform" href="/audio/transcription" horizontal>
+  Send an audio file (mp3/wav) and get back text.
 </Card>
