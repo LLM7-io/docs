@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "LLM7.io Documentation",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#19359a",
+    "light": "#19359a",
+    "dark": "#19359a"
   },
   "favicon": "https://llm7.io/favicon.svg",
   "navigation": {
