@@ -1,0 +1,109 @@
+---
+title: "Function calling"
+description: "Let the model invoke your functions and return structured results."
+icon: "brackets-curly"
+---
+
+<Warning>
+Function calling is available on paid plans only. Add a token from [token.llm7.io](https://token.llm7.io) before you start.
+</Warning>
+
+Bind model outputs to your own logic with tool calls. This guide shows how to declare a function, let the model request it, and return the result to finish the conversation.
+
+## Prerequisites
+
+- Python 3.9+ with `requests` installed
+- A paid LLM7.io token set in `API_KEY`
+- Access to `https://api.llm7.io/v1/chat/completions`
+
+## Full example
+
+This end-to-end example asks for the weather in Пермь, lets the model request your `get_weather` tool, and sends back mocked data.
+
+```python
+import json
+import requests
+
+API_KEY = "your-token"  # Required for paid features
+BASE_URL = "https://api.llm7.io/v1/chat/completions"
+
+# 1) Describe the callable function
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "City and state, e.g. Boston, MA"
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": ["celsius", "fahrenheit"]
+                }
+            },
+            "required": ["location"]
+        }
+    }
+}]
+
+# 2) Let the model decide whether to call the function
+payload = {
+    "model": "openai",
+    "messages": [{"role": "user", "content": "What's the weather in Пермь?"}],
+    "tools": tools,
+    "tool_choice": "auto"
+}
+
+response = requests.post(
+    BASE_URL,
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    json=payload,
+    timeout=30,
+).json()
+
+message = response["choices"][0]["message"]
+
+# 3) If the model asks for a tool, supply the result and get the final reply
+if message.get("tool_calls"):
+    tool_call = message["tool_calls"][0]
+    print(f"Model requested: {tool_call}")
+
+    # Replace with a real weather API call
+    weather_data = {
+        "temperature": 12,
+        "condition": "sunny",
+        "unit": "celsius"
+    }
+
+    follow_up_messages = [
+        {"role": "user", "content": "What's the weather in Пермь?"},
+        message,
+        {
+            "role": "tool",
+            "tool_call_id": tool_call["id"],
+            "content": json.dumps(weather_data)
+        }
+    ]
+
+    final = requests.post(
+        BASE_URL,
+        headers={"Authorization": f"Bearer {API_KEY}"},
+        json={"model": "openai", "messages": follow_up_messages},
+        timeout=30,
+    ).json()
+
+    print(final["choices"][0]["message"]["content"])
+else:
+    print(message["content"])
+```
+
+## Key parameters
+
+- `tools`: JSON Schema that declares each function you will allow the model to call.
+- `tool_choice: "auto"`: Lets the model decide whether to call your tool or answer directly.
+- `tool_calls[*].id`: Connects the model’s request to your function output; return it in the `tool_call_id` field.
+- `messages`: Keep the full conversation history plus the tool call and its response so the model can produce a final answer.
