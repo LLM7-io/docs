@@ -1,0 +1,46 @@
+---
+title: "Available models"
+description: "List text models and choose default, fast, or pro."
+icon: "box"
+---
+
+<Warning>
+`pro` is available on paid plans only. Model selection will be simplified soon: you'll pick `default`, `fast`, or `pro` instead of specific model IDs.
+</Warning>
+
+Use the Models API to see what text models are currently available.
+
+```bash
+curl https://api.llm7.io/v1/models
+```
+
+Example response (truncated):
+
+```json
+[
+  {
+    "id": "gpt-4.1-nano-2025-04-14",
+    "object": "model",
+    "owned_by": "openai",
+    "modalities": { "input": ["text"] },
+    "tools_calling": true,
+    "context_window": { "chars": 5000, "tokens": null }
+  },
+  {
+    "id": "mistral-small-3.1-24b-instruct-2503",
+    "object": "model",
+    "owned_by": "mistral",
+    "modalities": { "input": ["text"] },
+    "tools_calling": true,
+    "context_window": { "chars": null, "tokens": 32000 }
+  }
+]
+```
+
+## Recommended model selectors
+
+- `default`: first available free model (good general choice)
+- `fast`: lowest latency option
+- `pro`: highest quality, longer reasoning (paid plans)
+
+Concrete model IDs will be phased out in favor of these selectors. Prefer `default`, `fast`, or `pro` in new integrations.
