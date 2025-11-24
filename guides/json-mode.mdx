@@ -1,0 +1,46 @@
+---
+title: "JSON mode"
+description: "Force well-structured JSON outputs from the model."
+icon: "code"
+---
+
+<Warning>
+JSON mode is available on paid plans only. Add a token from [token.llm7.io](https://token.llm7.io) before you start.
+</Warning>
+
+Use JSON mode when you need strict, machine-readable responses. Set `response_format` to `{"type": "json_object"}` to have the model return valid JSON.
+
+```python
+import json
+import openai
+
+client = openai.OpenAI(
+    base_url="https://api.llm7.io/v1",
+    api_key="your-token",  # Required for paid features
+)
+
+prompt = "Return a JSON object with fields city, country, and temperature_c."
+
+stream = client.chat.completions.create(
+    model="bidara",
+    messages=[
+        {"role": "system", "content": "Answer with valid JSON only."},
+        {"role": "user", "content": prompt},
+    ],
+    response_format={"type": "json_object"},
+    temperature=0.2,
+    stream=True,
+)
+
+full = ""
+for chunk in stream:
+    delta = chunk.choices[0].delta.content or ""
+    full += delta
+
+data = json.loads(full)
+print(data)
+```
+
+<Tip>
+Keep prompts short and explicit about required keys. Lower temperatures reduce the chance of malformed JSON.
+</Tip>
