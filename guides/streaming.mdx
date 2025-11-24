@@ -1,0 +1,34 @@
+---
+title: "Streaming"
+description: "Stream chat tokens for lower latency responses."
+icon: "bolt"
+---
+
+Stream responses to start rendering before the full completion is ready.
+
+```python
+import openai
+
+client = openai.OpenAI(
+    base_url="https://api.llm7.io/v1",
+    api_key="none",  # or your token
+)
+
+stream = client.chat.completions.create(
+    model="fast",
+    messages=[
+        {"role": "system", "content": "Answer concisely."},
+        {"role": "user", "content": "List three tips for fast Python scripts."},
+    ],
+    stream=True,
+    temperature=0.4,
+)
+
+for chunk in stream:
+    delta = chunk.choices[0].delta.content or ""
+    print(delta, end="", flush=True)
+```
+
+<Tip>
+Each chunk includes `choices[0].delta` content. Watch `choices[0].finish_reason` to know when the stream ends.
+</Tip>
