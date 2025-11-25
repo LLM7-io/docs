@@ -18,7 +18,7 @@ Bind model outputs to your own logic with tool calls. This guide shows how to de
 
 ## Full example
 
-This end-to-end example asks for the weather in Пермь, lets the model request your `get_weather` tool, and sends back mocked data.
+This end-to-end example asks for the weather in London, lets the model request your `get_weather` tool, and sends back mocked data.
 
 ```python
 import json
@@ -53,7 +53,7 @@ tools = [{
 # 2) Let the model decide whether to call the function
 payload = {
     "model": "openai",
-    "messages": [{"role": "user", "content": "What's the weather in Пермь?"}],
+    "messages": [{"role": "user", "content": "What's the weather in London?"}],
     "tools": tools,
     "tool_choice": "auto"
 }
@@ -80,7 +80,7 @@ if message.get("tool_calls"):
     }
 
     follow_up_messages = [
-        {"role": "user", "content": "What's the weather in Пермь?"},
+        {"role": "user", "content": "What's the weather in London?"},
         message,
         {
             "role": "tool",
