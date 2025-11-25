@@ -6,6 +6,10 @@ icon: "image"
 
 Turn a text prompt into an image with the Images API.
 
+<Warning>
+Watermark removal (`nologo: true`) is available on paid plans only.
+</Warning>
+
 ```python
 from openai import OpenAI
 
@@ -19,8 +23,8 @@ prompt = (
 res = client.images.generate(
     model="flux",          # or "turbo" (aliases: 1, 2, image-model-1, image-model-2)
     prompt=prompt,
-    size="1024x1024",      # or set w / h
-    extra_body={"seed": 42},
+    size="1024x1024",
+    extra_body={"seed": 42, "nologo": True},  # nologo=true requires a paid plan
 )
 
 print(f"See: {res.data[0].url}")
@@ -34,4 +38,4 @@ print(f"See: {res.data[0].url}")
 - `seed`: integer for reproducible outputs.
 - `n`: number of images (1–4).
 - `response_format`: `"url"`.
-- `nologo`: `false` by default; set `true` to suppress the watermark.
+- `nologo`: `false` by default; set `true` to suppress the watermark (paid plans).
