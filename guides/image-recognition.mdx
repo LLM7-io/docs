@@ -1,0 +1,89 @@
+---
+title: "Image recognition"
+description: "Send images to chat models for captions, OCR, and visual Q&A."
+icon: "camera"
+---
+
+Use the chat completions API to describe or reason about images. Add both the prompt and the image URL to the same user message so the model can reference the visual context.
+
+## Streaming example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.llm7.io/v1",
+    api_key="unused",  # replace with your token for higher limits
+)
+
+image_url = "https://images.weserv.nl/?url=wsrv.nl/lichtenstein.jpg&w=600&output=webp"
+
+messages = [
+    {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "Describe this image for alt text."},
+            {"type": "image_url", "image_url": {"url": image_url}},
+        ],
+    }
+]
+
+stream = client.chat.completions.create(
+    model="pro",  # vision-capable selector
+    messages=messages,
+    temperature=0.5,
+    stream=True,
+)
+
+model_used = None
+for chunk in stream:
+    model_used = chunk.model
+    delta = chunk.choices[0].delta.content or []
+    if isinstance(delta, list):
+        delta = "".join(
+            part.get("text", "") for part in delta if part.get("type") == "text"
+        )
+    print(delta, end="", flush=True)
+
+print(f"\nModel selected: {model_used}")
+```
+
+<Tip>
+Use a publicly reachable `https` image (or a signed URL) and keep text + image together in one `content` array. The streamed response is text only.
+</Tip>
+
+## Non-streaming call
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.llm7.io/v1",
+    api_key="unused",
+)
+
+image_url = "https://images.weserv.nl/?url=wsrv.nl/lichtenstein.jpg&w=600&output=webp"
+
+result = client.chat.completions.create(
+    model="pro",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Summarize the scene in one sentence."},
+                {"type": "image_url", "image_url": {"url": image_url}},
+            ],
+        }
+    ],
+    temperature=0.3,
+)
+
+print(result.choices[0].message.content)
+print(f"Model selected: {result.model}")
+```
+
+## What to remember
+
+- `messages[*].content` is an array: include both `text` and `image_url` parts in the same user message.
+- Image URLs must be reachable over HTTPS; signed URLs work if they stay valid for the request duration.
+- `response.model` (or `chunk.model` while streaming) tells you which underlying model handled the call.

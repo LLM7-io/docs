@@ -25,6 +25,7 @@
             "group": "Text generation",
             "pages": [
               "guides/streaming",
+              "guides/image-recognition",
               "guides/function-calling",
               "guides/json-mode",
               "guides/models"
