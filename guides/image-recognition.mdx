@@ -29,7 +29,7 @@ messages = [
 ]
 
 stream = client.chat.completions.create(
-    model="pro",  # vision-capable selector
+    model="default",
     messages=messages,
     temperature=0.5,
     stream=True,
