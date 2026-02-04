@@ -11,7 +11,7 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="none",  # or your token
+    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
 )
 
 stream = client.chat.completions.create(

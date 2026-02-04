@@ -12,6 +12,10 @@ Click the green **Use this template** button at the top of this repo to copy the
 
 **[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
 
+## LLM7 API token
+
+LLM7.io requires a token for API requests. Get one for free at [token.llm7.io](https://token.llm7.io/) for higher rate limits and use it as the `api_key` in examples.
+
 ## Development
 
 Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:

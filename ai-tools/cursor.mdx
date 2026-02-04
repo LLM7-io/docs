@@ -1,10 +1,10 @@
 ---
 title: "Usage overview"
-description: "Quick instructions for text and audio endpoints."
+description: "Quick instructions for text endpoints."
 icon: "book-open"
 ---
 
-Everything you need to hit the core endpoints in one place: text generation and audio transcription.
+Everything you need to hit the core endpoints in one place: text generation.
 
 ## Text generation
 
@@ -13,7 +13,7 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="none",  # or your token
+    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
 )
 
 resp = client.chat.completions.create(
@@ -31,37 +31,3 @@ print(resp.choices[0].message.content)
 <Tip>
 Use `model="fast"` for lowest latency and `model="pro"` (paid) for the highest quality reasoning.
 </Tip>
-
-## Audio transcription
-
-```python
-import openai
-import pathlib
-
-client = openai.OpenAI(
-    base_url="https://api.llm7.io/v1",
-    api_key="none",  # or your token
-)
-
-def transcribe(audio_path: str):
-    with pathlib.Path(audio_path).open("rb") as fp:
-        return client.audio.transcriptions.create(
-            model="gpt-4o-mini-audio-preview",
-            file=fp,
-            language="en",
-            response_format="json",
-            temperature=0,
-        )
-
-print(transcribe("1.mp3"))
-```
-
-Expected response structure:
-
-```
-Transcription(text="Transcription...", logprobs=None)
-```
-
-<Note>
-Audio supports `.mp3` and `.wav`. Set `language` to improve accuracy for non-English audio.
-</Note>

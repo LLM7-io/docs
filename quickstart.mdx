@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Build with LLM7.io in minutes: chat and audio."
+description: "Build with LLM7.io in minutes: chat."
 ---
 
 ## Get started in two steps
@@ -19,14 +19,14 @@ pip install openai
   </Accordion>
 
   <Accordion icon="key" title="Configure the client" defaultOpen>
-    You can use LLM7.io without a key for low-volume use. For higher limits, get a free token at [token.llm7.io](https://token.llm7.io/).
+    LLM7.io requires a token. Get one for free at [token.llm7.io](https://token.llm7.io/) for higher rate limits.
 
 ```python
 import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # or your token from https://token.llm7.io/
+    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
 )
 ```
 
@@ -44,7 +44,7 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # replace if you have a token
+    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
 )
 
 resp = client.chat.completions.create(
@@ -80,10 +80,6 @@ Once upon a time, in a lush green forest, there lived a brave squirrel named Sam
 
 <Card title="Streaming" icon="bolt" href="/guides/streaming">
   Stream tokens for lower latency UIs.
-</Card>
-
-<Card title="Audio transcription" icon="waveform" href="/audio/transcription">
-  Turn speech into text with a single call.
 </Card>
 
 <Card title="Available models" icon="box" href="/guides/models">

@@ -3,18 +3,17 @@ title: "Limits"
 description: "Rate limits for text endpoints by plan."
 ---
 
-LLM7.io supports anonymous requests plus higher tiers with tokens. Limits vary by plan and endpoint.
+LLM7.io requires a token. Limits vary by plan and endpoint.
 
 ## Text generation (/v1/chat/completions)
 
 | Plan | 1 second | 1 minute | 1 hour |
 | ---- | -------- | -------- | ------ |
-| Anonymous (no token) | 1 | 10 | 60 |
 | Free token | 2 | 20 | 100 |
 | Pro ($12/mo) | 25 | 1,500 | 15,000 |
 
 Note: Maximum input sizes also depend on your tier and the specific model.
 
 <Note>
-Use a token from [token.llm7.io](https://token.llm7.io) to move from anonymous limits to token-based tiers. For higher caps, upgrade to Pro.
+Get a free token at [token.llm7.io](https://token.llm7.io) or upgrade to Pro for higher caps.
 </Note>
