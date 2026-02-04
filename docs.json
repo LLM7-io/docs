@@ -32,12 +32,6 @@
             ]
           },
           {
-            "group": "Audio",
-            "pages": [
-              "audio/transcription"
-            ]
-          },
-          {
             "group": "AI tools",
             "pages": [
               "ai-tools/cursor"
