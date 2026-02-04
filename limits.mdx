@@ -1,6 +1,6 @@
 ---
 title: "Limits"
-description: "Rate limits for text and image endpoints by plan."
+description: "Rate limits for text endpoints by plan."
 ---
 
 LLM7.io supports anonymous requests plus higher tiers with tokens. Limits vary by plan and endpoint.
@@ -15,15 +15,6 @@ LLM7.io supports anonymous requests plus higher tiers with tokens. Limits vary b
 | Pro ($12/mo) | 25 | 1,500 | 15,000 |
 
 Note: Maximum input sizes also depend on your tier and the specific model.
-
-## Image generation (/v1/images/generations)
-
-| Plan | 1 second | 1 minute |
-| ---- | -------- | -------- |
-| Anonymous (no token) | 1 | 3 |
-| Free token | 2 | 5 |
-| Vibe ($5/mo) | 10 | 60 |
-| Pro ($12/mo) | 20 | 120 |
 
 <Note>
 Use a token from [token.llm7.io](https://token.llm7.io) to move from anonymous limits to token-based tiers. For higher caps, upgrade to Vibe or Pro.

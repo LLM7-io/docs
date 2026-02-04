@@ -32,12 +32,6 @@
             ]
           },
           {
-            "group": "Image generation",
-            "pages": [
-              "vision/image-generation"
-            ]
-          },
-          {
             "group": "Audio",
             "pages": [
               "audio/transcription"

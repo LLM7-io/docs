@@ -1,10 +1,10 @@
 ---
 title: "Usage overview"
-description: "Quick instructions for text, image, and audio endpoints."
+description: "Quick instructions for text and audio endpoints."
 icon: "book-open"
 ---
 
-Everything you need to hit the core endpoints in one place: text generation, image generation, and audio transcription.
+Everything you need to hit the core endpoints in one place: text generation and audio transcription.
 
 ## Text generation
 
@@ -31,28 +31,6 @@ print(resp.choices[0].message.content)
 <Tip>
 Use `model="fast"` for lowest latency and `model="pro"` (paid) for the highest quality reasoning.
 </Tip>
-
-## Image generation
-
-```python
-from openai import OpenAI
-
-client = OpenAI(base_url="https://api.llm7.io/v1", api_key="none")
-
-prompt = (
-    "A futuristic cityscape at sunset, flying cars, neon reflections, "
-    "cinematic cyberpunk, highly detailed"
-)
-
-res = client.images.generate(
-    model="flux",          # or "turbo" (aliases: 1, 2, image-model-1, image-model-2)
-    prompt=prompt,
-    size="1024x1024",      # or set w / h (100–1500)
-    extra_body={"seed": 42},
-)
-
-print(res.data[0].url)
-```
 
 ## Audio transcription
 

@@ -1,9 +1,9 @@
 ---
 title: "Quickstart"
-description: "Build with LLM7.io in minutes: chat, images, and more."
+description: "Build with LLM7.io in minutes: chat and audio."
 ---
 
-## Get started in three steps
+## Get started in two steps
 
 Spin up the OpenAI SDK against the LLM7.io endpoint and make your first requests.
 
@@ -66,44 +66,6 @@ Once upon a time, in a lush green forest, there lived a brave squirrel named Sam
 </Accordion>
 </AccordionGroup>
 
-### Step 3: Image generation
-
-<AccordionGroup>
-  <Accordion icon="image" title="Images API (Python)">
-
-```python
-from openai import OpenAI
-
-client = OpenAI(base_url="https://api.llm7.io/v1", api_key="none")
-
-prompt = (
-    "A futuristic cityscape at sunset, flying cars, neon reflections, "
-    "cinematic cyberpunk, highly detailed"
-)
-
-res = client.images.generate(
-    model="flux",
-    prompt=prompt,
-    size="1024x1024",
-    extra_body={"seed": 42},
-)
-
-print(f"See: {res.data[0].url}")
-```
-
-The output will be a URL to the generated image, for example:
-
-```
-See: https://wsrv.nl/?url=https://api.llm7.io/i/Xr45.jpeg&maxage=31d
-```
-
-Which displays an image like this:
-
-![A futuristic cityscape at sunset, flying cars, neon reflections, cinematic cyberpunk, highly detailed](https://wsrv.nl/?url=https://api.llm7.io/i/Xr45.jpeg&maxage=31d)
-
-</Accordion>
-</AccordionGroup>
-
 ## Next steps
 
 <CardGroup cols={2}>
@@ -118,10 +80,6 @@ Which displays an image like this:
 
 <Card title="Streaming" icon="bolt" href="/guides/streaming">
   Stream tokens for lower latency UIs.
-</Card>
-
-<Card title="Image generation" icon="image" href="/vision/image-generation">
-  Advanced prompts, seeds, and sizing options.
 </Card>
 
 <Card title="Audio transcription" icon="waveform" href="/audio/transcription">
