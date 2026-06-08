@@ -1,6 +1,6 @@
 ---
 title: "Limits"
-description: "Rate limits for text endpoints by plan."
+description: "Rate and token-usage limits for text endpoints by plan."
 ---
 
 LLM7.io requires a token. Limits vary by plan and endpoint.
@@ -11,6 +11,15 @@ LLM7.io requires a token. Limits vary by plan and endpoint.
 | ---- | -------- | -------- | ------ |
 | Free token | 2 | 40 | 100 |
 | Pro ($12/mo) | 25 | 1,500 | 15,000 |
+
+## Daily token usage
+
+Daily token usage is counted as input tokens plus output tokens over a rolling 24-hour window.
+
+| Plan | 24-hour token limit |
+| ---- | ------------------- |
+| Free token | 5,000,000 |
+| Pro ($12/mo) | 5,000,000,000 |
 
 Note: Maximum input sizes also depend on your tier and the specific model.
 
