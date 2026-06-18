@@ -19,14 +19,14 @@ pip install openai
   </Accordion>
 
   <Accordion icon="key" title="Configure the client" defaultOpen>
-    LLM7.io requires a token. Get one for free at [token.llm7.io](https://token.llm7.io/) for higher rate limits.
+    LLM7.io requires a token. Get one for free at [dash.llm7.io](https://dash.llm7.io/) for higher rate limits.
 
 ```python
 import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
+    api_key="unused",  # Required. Get it for free at https://dash.llm7.io/ for higher rate limits.
 )
 ```
 
@@ -44,7 +44,7 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
+    api_key="unused",  # Required. Get it for free at https://dash.llm7.io/ for higher rate limits.
 )
 
 resp = client.chat.completions.create(

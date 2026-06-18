@@ -5,7 +5,7 @@ icon: "code"
 ---
 
 <Warning>
-JSON mode is available on paid plans only. Add a token from [token.llm7.io](https://token.llm7.io) before you start.
+JSON mode is available on paid plans only. Add a token from [dash.llm7.io](https://dash.llm7.io) before you start.
 </Warning>
 
 Use JSON mode when you need strict, machine-readable responses. Set `response_format` to `{"type": "json_object"}` to have the model return valid JSON.
@@ -16,7 +16,7 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Required. Get it for free at https://token.llm7.io/ for higher rate limits.
+    api_key="unused",  # Required. Get it for free at https://dash.llm7.io/ for higher rate limits.
 )
 
 prompt = "Return a JSON object with fields city, country, and temperature_c."
