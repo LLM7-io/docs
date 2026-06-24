@@ -1,46 +1,83 @@
 ---
 title: "Available models"
-description: "List text models and choose default, fast, or pro."
+description: "Choose model selectors and discover live model options."
 icon: "box"
 ---
 
 <Warning>
-`pro` is available on paid plans only. Model selection will be simplified soon: you'll pick `default`, `fast`, or `pro` instead of specific model IDs.
+`pro` is available to Pro subscribers and users with a topped-up balance. Model availability changes over time, so prefer selectors unless you need a specific live model ID.
 </Warning>
 
-Use the Models API to see what text models are currently available.
+For most applications, use a selector or a live model ID from the Models API:
+
+- `default`: first available general-purpose model
+- `fast`: low-latency model for interactive workloads
+- `pro`: higher-quality paid model with larger limits or advanced capabilities
+- a concrete model ID, such as `gpt-5.4`, when you need to pin routing, behavior, or cost
+
+```python
+resp = client.chat.completions.create(
+    model="fast",  # or "default", "pro", or a model ID from /v1/models
+    messages=[{"role": "user", "content": "Summarize this in one paragraph."}],
+)
+```
+
+## Live model catalog
+
+Use the Models API when you need exact model IDs, current pricing, context windows, modalities, or capability flags:
 
 ```bash
 curl https://api.llm7.io/v1/models
 ```
 
-Example response (truncated):
+The response is a live catalog. Do not assume a model ID will always be present.
 
 ```json
-[
-  {
-    "id": "gpt-4.1-nano-2025-04-14",
-    "object": "model",
-    "owned_by": "openai",
-    "modalities": { "input": ["text"] },
-    "tools_calling": true,
-    "context_window": { "chars": 5000, "tokens": null }
-  },
-  {
-    "id": "mistral-small-3.1-24b-instruct-2503",
-    "object": "model",
-    "owned_by": "mistral",
-    "modalities": { "input": ["text"] },
-    "tools_calling": true,
-    "context_window": { "chars": null, "tokens": 32000 }
-  }
-]
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "gpt-5.4",
+      "object": "model",
+      "tier": "pro",
+      "pricing": {
+        "input": 0.5,
+        "output": 4.5,
+        "currency": "USD",
+        "unit": "1M tokens"
+      },
+      "modalities": { "input": ["text"], "output": ["text"] },
+      "context_window": { "tokens": 1050000, "chars": null },
+      "usage_based_only": true,
+      "stream": true,
+      "json_mode": true,
+      "reasoning": true,
+      "tools_calling": true
+    }
+  ]
+}
 ```
 
-## Recommended model selectors
+<Card title="Models API" icon="list" href="/guides/models-api">
+  Learn how to read tiers, pricing, context windows, modalities, and capability flags.
+</Card>
 
-- `default`: first available free model (good general choice)
-- `fast`: lowest latency option
-- `pro`: highest quality, longer reasoning (paid plans)
+## When to use a specific ID
 
-Concrete model IDs will be phased out in favor of these selectors. Prefer `default`, `fast`, or `pro` in new integrations.
+Use a concrete model ID only when you need to pin behavior for evaluation, routing, or cost controls. Before sending traffic, check the live model catalog and confirm the model supports the feature you need.
+
+For example:
+
+```js
+const supportsVision = model.modalities?.input?.includes("image");
+const supportsTools = model.tools_calling === true;
+const supportsJson = model.json_mode === true;
+```
+
+## Access tiers
+
+`turbo` models are fast models available to anonymous and free-token users. They are a good fit for low-latency and cost-sensitive workloads.
+
+`pro` models are available on Pro subscriptions or paid balances. They may include larger context windows, reasoning, vision, JSON mode, streaming, or tool calling depending on the model record.
+
+See [Limits](/limits) for rate limits and token availability by access type.

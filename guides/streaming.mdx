@@ -11,11 +11,11 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Required. Get it for free at https://dash.llm7.io/ for higher rate limits.
+    api_key="unused",  # Use a https://dash.llm7.io/ token for higher limits.
 )
 
 stream = client.chat.completions.create(
-    model="fast",
+    model="fast",  # or another model with stream: true from /v1/models
     messages=[
         {"role": "system", "content": "Answer concisely."},
         {"role": "user", "content": "List three tips for fast Python scripts."},
@@ -30,5 +30,5 @@ for chunk in stream:
 ```
 
 <Tip>
-Each chunk includes `choices[0].delta` content. Watch `choices[0].finish_reason` to know when the stream ends.
+Each chunk includes `choices[0].delta` content. Watch `choices[0].finish_reason` to know when the stream ends. Use the [Models API](/guides/models-api) to find models with `stream: true`.
 </Tip>

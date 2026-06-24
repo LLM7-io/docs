@@ -5,7 +5,7 @@ icon: "brackets-curly"
 ---
 
 <Warning>
-Function calling is available on paid plans only. Add a token from [dash.llm7.io](https://dash.llm7.io) before you start.
+Function calling depends on the selected model. Use the [Models API](/guides/models-api) to find models with `tools_calling: true`.
 </Warning>
 
 Bind model outputs to your own logic with tool calls. This guide shows how to declare a function, let the model request it, and return the result to finish the conversation.
@@ -13,7 +13,7 @@ Bind model outputs to your own logic with tool calls. This guide shows how to de
 ## Prerequisites
 
 - Python 3.9+ with `requests` installed
-- A paid LLM7.io token set in `API_KEY`
+- An LLM7.io token set in `API_KEY`
 - Access to `https://api.llm7.io/v1/chat/completions`
 
 ## Full example

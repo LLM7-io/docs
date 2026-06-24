@@ -3,12 +3,13 @@ title: "Limits"
 description: "Rate and token-usage limits for text endpoints by plan."
 ---
 
-LLM7.io requires a token. Limits vary by plan and endpoint.
+Limits vary by access type, plan, endpoint, and model availability.
 
 ## Text generation (/v1/chat/completions)
 
-| Plan | 1 second | 1 minute | 1 hour |
-| ---- | -------- | -------- | ------ |
+| Access type | 1 second | 1 minute | 1 hour |
+| ----------- | -------- | -------- | ------ |
+| Anonymous | 1 | 10 | 60 |
 | Free token | 2 | 40 | 100 |
 | Pro ($12/mo) | 25 | 1,500 | 15,000 |
 
@@ -16,15 +17,18 @@ LLM7.io requires a token. Limits vary by plan and endpoint.
 
 Token usage is counted as input tokens plus output tokens.
 
-| Plan | Token availability |
-| ---- | ------------------ |
+| Access type | Token availability |
+| ----------- | ------------------ |
+| Anonymous | 500,000 tokens per 24 hours |
 | Free token | 1,000,000 tokens per 24 hours |
 | Pro ($12/mo) | Higher dynamically managed token limits than the free tier |
 
-For Pro accounts, token availability is calculated across the monthly billing period based on your usage relative to the percentage of the billing period that has elapsed. Pro token availability remains subject to model availability, service capacity, fair-use calculations, and abuse-prevention controls.
+For Pro accounts, token availability is calculated across the monthly billing period based on your usage relative to the percentage of the billing period that has elapsed. You can check current allowance in the [dashboard](https://dash.llm7.io/). After the Pro allowance is reached, requests can continue from a topped-up balance and are billed from the live model pricing.
 
-Note: Maximum input sizes also depend on your tier and the specific model.
+Pro token availability remains subject to model availability, service capacity, fair-use calculations, and abuse-prevention controls.
+
+Note: Maximum input sizes also depend on your access tier and the specific model context window.
 
 <Note>
-Get a free token at [dash.llm7.io](https://dash.llm7.io) or upgrade to Pro for higher caps.
+Use the [Models API](/guides/models-api) to inspect live model tiers, pricing, context windows, and capability flags. Get a free token at [dash.llm7.io](https://dash.llm7.io) or upgrade to Pro for higher caps.
 </Note>

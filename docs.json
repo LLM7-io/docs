@@ -28,7 +28,8 @@
               "guides/image-recognition",
               "guides/function-calling",
               "guides/json-mode",
-              "guides/models"
+              "guides/models",
+              "guides/models-api"
             ]
           },
           {

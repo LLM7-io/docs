@@ -1,0 +1,190 @@
+---
+title: "Models API"
+description: "Read the live model catalog, pricing fields, limits, and capabilities."
+icon: "list"
+---
+
+Use the Models API to list the models that are currently available through LLM7.io.
+
+```bash
+curl https://api.llm7.io/v1/models
+```
+
+The catalog is live. Model IDs, pricing, tiers, context windows, and capability flags can change as upstream availability changes. Check this endpoint at startup, on a schedule, or before showing model choices in your own UI.
+
+## Response shape
+
+The endpoint returns an OpenAI-compatible list object:
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "gpt-5.4",
+      "object": "model",
+      "created": 1782277907,
+      "owned_by": "",
+      "tier": "pro",
+      "pricing": {
+        "input": 0.5,
+        "output": 4.5,
+        "minimum_request_price_usd": 0.0001,
+        "minimum_cache_tokens": 300,
+        "currency": "USD",
+        "unit": "1M tokens"
+      },
+      "pricing_mode": "token",
+      "modalities": {
+        "input": ["text"],
+        "output": ["text"]
+      },
+      "context_window": {
+        "tokens": 1050000,
+        "chars": null
+      },
+      "usage_based_only": true,
+      "stream": true,
+      "json_mode": true,
+      "reasoning": true,
+      "tools_calling": true
+    }
+  ]
+}
+```
+
+## Field reference
+
+<ResponseField name="object" type="string">
+  The response container type. This is usually `list`.
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  The currently available model records. Treat this as dynamic rather than a permanent catalog.
+</ResponseField>
+
+<ResponseField name="data[].id" type="string">
+  The model ID to pass as `model` in `/v1/chat/completions`. You can also use selectors such as `default`, `fast`, and `pro` where supported.
+</ResponseField>
+
+<ResponseField name="data[].tier" type="string">
+  The access tier for the model.
+
+  `turbo` models are fast models available to anonymous and free-token users, subject to lower rate and token limits.
+
+  `pro` models are available to Pro subscribers and users with a topped-up balance. Pro subscription allowance is calculated dynamically across the billing period and can be checked in the [dashboard](https://dash.llm7.io/).
+</ResponseField>
+
+<ResponseField name="data[].pricing" type="object">
+  Per-model pricing metadata used to calculate request cost for paid usage and paid allowance accounting.
+</ResponseField>
+
+<ResponseField name="data[].pricing.input" type="number">
+  Input-token price in the listed `currency` and `unit`.
+</ResponseField>
+
+<ResponseField name="data[].pricing.output" type="number">
+  Output-token price in the listed `currency` and `unit`.
+</ResponseField>
+
+<ResponseField name="data[].pricing.currency" type="string">
+  The pricing currency, for example `USD`.
+</ResponseField>
+
+<ResponseField name="data[].pricing.unit" type="string">
+  The pricing unit, for example `1M tokens`.
+</ResponseField>
+
+<ResponseField name="data[].pricing.minimum_request_price_usd" type="number">
+  Optional minimum cost applied to each request, even when the input and output token total would cost less.
+</ResponseField>
+
+<ResponseField name="data[].pricing.minimum_cache_tokens" type="number">
+  Optional cache accounting floor. When present, cache-related billing treats each request as using at least this many cache tokens.
+</ResponseField>
+
+<ResponseField name="data[].pricing_mode" type="string">
+  How pricing is calculated. `token` means usage is priced from input and output token counts.
+</ResponseField>
+
+<ResponseField name="data[].modalities" type="object">
+  Input and output types supported by the model. Models with `image` in `modalities.input` can accept image inputs for vision workflows. Output is usually `text`.
+</ResponseField>
+
+<ResponseField name="data[].context_window" type="object">
+  The maximum context the model can process in one request, including prompt input and generated output. Models may report this in `tokens`, `chars`, or both.
+</ResponseField>
+
+<ResponseField name="data[].usage_based_only" type="boolean">
+  `true` means the model is only available through paid usage accounting, such as a Pro allowance or topped-up balance.
+</ResponseField>
+
+<ResponseField name="data[].stream" type="boolean">
+  Whether the model supports streamed responses.
+</ResponseField>
+
+<ResponseField name="data[].json_mode" type="boolean">
+  Whether the model supports JSON mode.
+</ResponseField>
+
+<ResponseField name="data[].reasoning" type="boolean">
+  Whether the model supports reasoning-style behavior.
+</ResponseField>
+
+<ResponseField name="data[].tools_calling" type="boolean">
+  Whether the model supports tool and function calling.
+</ResponseField>
+
+## Access and limits
+
+| Access type | Models | Token availability | Rate limits |
+| ----------- | ------ | ------------------ | ----------- |
+| Anonymous | `turbo` models | 500,000 tokens per day | 1 request/second, 10/minute, 60/hour |
+| Free token | `turbo` models | 1,000,000 tokens per day | 2 requests/second, 40/minute, 100/hour |
+| Pro subscription | `pro` and `turbo` models | Dynamic Pro allowance for the billing period | Higher paid limits |
+| Topped-up balance | `pro` and `turbo` models | Usage billed from balance | Higher paid limits |
+
+After a Pro subscription allowance is reached, requests can continue from a topped-up balance and are billed from model pricing, token counts, and any per-request minimums.
+
+<Note>
+You can see current Pro allowance and billing status in the [LLM7.io dashboard](https://dash.llm7.io/).
+</Note>
+
+## Estimating request cost
+
+For token-priced models, calculate cost from the input and output token counts:
+
+```txt
+cost = (input_tokens * pricing.input + output_tokens * pricing.output) / 1_000_000
+```
+
+If `minimum_request_price_usd` is present, the charged request cost is at least that value:
+
+```txt
+charged_cost = max(cost, pricing.minimum_request_price_usd)
+```
+
+Use the live `currency` and `unit` fields instead of assuming all models share the same pricing unit forever.
+
+## Choosing a model programmatically
+
+Use the live fields instead of hard-coding model names:
+
+```js
+const response = await fetch("https://api.llm7.io/v1/models");
+const { data: models } = await response.json();
+
+const visionModels = models.filter((model) =>
+  model.modalities?.input?.includes("image")
+);
+
+const jsonStreamingModels = models.filter(
+  (model) => model.json_mode && model.stream
+);
+
+const affordableProModels = models.filter(
+  (model) => model.tier === "pro" && model.pricing?.input <= 0.1
+);
+```
+
+For most integrations, start with the selectors in [Available models](/guides/models). Use this endpoint when you need to display live options, filter by capability, estimate cost, or validate that a specific model ID is still available.

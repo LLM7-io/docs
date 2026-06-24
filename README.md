@@ -14,7 +14,7 @@ Click the green **Use this template** button at the top of this repo to copy the
 
 ## LLM7 API token
 
-LLM7.io requires a token for API requests. Get one for free at [dash.llm7.io](https://dash.llm7.io/) for higher rate limits and use it as the `api_key` in examples.
+The OpenAI SDK examples require an `api_key` value. Use a token from [dash.llm7.io](https://dash.llm7.io/) for higher limits, or use `unused` for anonymous access.
 
 ## Development
 

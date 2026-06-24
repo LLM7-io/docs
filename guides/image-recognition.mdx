@@ -13,7 +13,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Required. Get it for free at https://dash.llm7.io/ for higher rate limits.
+    api_key="unused",  # Use a https://dash.llm7.io/ token for higher limits.
 )
 
 image_url = "https://images.weserv.nl/?url=wsrv.nl/lichtenstein.jpg&w=600&output=webp"
@@ -29,7 +29,7 @@ messages = [
 ]
 
 stream = client.chat.completions.create(
-    model="default",
+    model="default",  # or a model ID with image input from /v1/models
     messages=messages,
     temperature=0.5,
     stream=True,
@@ -49,7 +49,7 @@ print(f"\nModel selected: {model_used}")
 ```
 
 <Tip>
-Use a publicly reachable `https` image (or a signed URL) and keep text + image together in one `content` array. The streamed response is text only.
+Use a publicly reachable `https` image (or a signed URL) and keep text + image together in one `content` array. Use the [Models API](/guides/models-api) to find models with `image` in `modalities.input`.
 </Tip>
 
 ## Non-streaming call
@@ -59,13 +59,13 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Required. Get it for free at https://dash.llm7.io/ for higher rate limits.
+    api_key="unused",  # Use a https://dash.llm7.io/ token for higher limits.
 )
 
 image_url = "https://images.weserv.nl/?url=wsrv.nl/lichtenstein.jpg&w=600&output=webp"
 
 result = client.chat.completions.create(
-    model="pro",
+    model="pro",  # or a model ID with image input from /v1/models
     messages=[
         {
             "role": "user",
