@@ -1,6 +1,6 @@
 ---
 title: "Limits"
-description: "Rate and token-usage limits for text endpoints by plan."
+description: "Rate, token-usage, and image endpoint limits by plan."
 ---
 
 Limits vary by access type, plan, endpoint, and model availability.
@@ -28,6 +28,20 @@ For Pro accounts, token availability is calculated across the monthly billing pe
 Pro token availability remains subject to model availability, service capacity, fair-use calculations, and abuse-prevention controls.
 
 Note: Maximum input sizes also depend on your access tier and the specific model context window.
+
+## Image API (/v1/images/generations, /v1/images/edits)
+
+Image requests require a valid LLM7 API token and are billed from available allowance or balance.
+
+| Limit | Value |
+| ----- | ----- |
+| Generated images per request | `1` |
+| URL image output | Not supported |
+| Edit mask field | Not supported |
+| `gpt-image-2` reference images | Up to 3 images |
+| `gpt-image-2` reference image size | Up to 8 MB per image |
+
+Image model metadata controls supported sizes, reference-image limits, and availability. Successful image responses include `usage.cost_usd` when billed cost is available.
 
 <Note>
 Use the [Models API](/guides/models-api) to inspect live model tiers, pricing, context windows, and capability flags. Get a free token at [dash.llm7.io](https://dash.llm7.io) or upgrade to Pro for higher caps.

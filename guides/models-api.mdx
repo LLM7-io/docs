@@ -64,7 +64,7 @@ The endpoint returns an OpenAI-compatible list object:
 </ResponseField>
 
 <ResponseField name="data[].id" type="string">
-  The model ID to pass as `model` in `/v1/chat/completions`. You can also use selectors such as `default`, `fast`, and `pro` where supported.
+  The model ID to pass as `model`. Chat workflows can also use selectors such as `default`, `fast`, and `pro` where supported. Image generation and edit workflows require a concrete image model ID, such as `gpt-image-2`.
 </ResponseField>
 
 <ResponseField name="data[].tier" type="string">
@@ -108,7 +108,7 @@ The endpoint returns an OpenAI-compatible list object:
 </ResponseField>
 
 <ResponseField name="data[].modalities" type="object">
-  Input and output types supported by the model. Models with `image` in `modalities.input` can accept image inputs for vision workflows. Output is usually `text`.
+  Input and output types supported by the model. Models with `image` in `modalities.input` can accept image inputs for vision workflows. Models with `image` in `modalities.output` can produce image outputs through image endpoints.
 </ResponseField>
 
 <ResponseField name="data[].context_window" type="object">
@@ -178,6 +178,10 @@ const visionModels = models.filter((model) =>
   model.modalities?.input?.includes("image")
 );
 
+const imageOutputModels = models.filter((model) =>
+  model.modalities?.output?.includes("image")
+);
+
 const jsonStreamingModels = models.filter(
   (model) => model.json_mode && model.stream
 );
@@ -187,4 +191,4 @@ const affordableProModels = models.filter(
 );
 ```
 
-For most integrations, start with the selectors in [Available models](/guides/models). Use this endpoint when you need to display live options, filter by capability, estimate cost, or validate that a specific model ID is still available.
+For most chat integrations, start with the selectors in [Available models](/guides/models). Use this endpoint when you need to display live options, filter by capability, estimate cost, or validate that a specific model ID is still available. For image workflows, use a concrete image model ID with the [Image generation and edits](/guides/image-generation) endpoints.

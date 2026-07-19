@@ -8,12 +8,14 @@ icon: "box"
 `pro` is available to Pro subscribers and users with a topped-up balance. Model availability changes over time, so prefer selectors unless you need a specific live model ID.
 </Warning>
 
-For most applications, use a selector or a live model ID from the Models API:
+For most chat applications, use a selector or a live model ID from the Models API:
 
 - `default`: first available general-purpose model
 - `fast`: low-latency model for interactive workloads
 - `pro`: higher-quality paid model with larger limits or advanced capabilities
 - a concrete model ID, such as `gpt-5.4`, when you need to pin routing, behavior, or cost
+
+For image generation and edits, pass a concrete image model ID such as `gpt-image-2` to the Image API. Chat selectors such as `default`, `fast`, and `pro` are intended for chat workflows.
 
 ```python
 resp = client.chat.completions.create(
@@ -70,6 +72,7 @@ For example:
 
 ```js
 const supportsVision = model.modalities?.input?.includes("image");
+const supportsImageOutput = model.modalities?.output?.includes("image");
 const supportsTools = model.tools_calling === true;
 const supportsJson = model.json_mode === true;
 ```

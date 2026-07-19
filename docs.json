@@ -25,7 +25,6 @@
             "group": "Text generation",
             "pages": [
               "guides/streaming",
-              "guides/image-recognition",
               "guides/function-calling",
               "guides/json-mode",
               "guides/models",
@@ -33,9 +32,34 @@
             ]
           },
           {
+            "group": "Images",
+            "pages": [
+              "guides/image-recognition",
+              "guides/image-generation"
+            ]
+          },
+          {
             "group": "AI tools",
             "pages": [
               "ai-tools/cursor"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Images",
+            "pages": [
+              "api-reference/endpoint/images-generations",
+              "api-reference/endpoint/images-edits"
             ]
           }
         ]

@@ -1,10 +1,10 @@
 ---
 title: "Usage overview"
-description: "Quick instructions for text endpoints."
+description: "Quick instructions for core endpoints."
 icon: "book-open"
 ---
 
-Everything you need to hit the core endpoints in one place: text generation.
+Everything you need to hit the core endpoints in one place.
 
 ## Text generation
 
@@ -30,4 +30,33 @@ print(resp.choices[0].message.content)
 
 <Tip>
 Use `model="fast"` for lowest latency and `model="pro"` for higher-quality paid models. See [Available models](/guides/models) for selectors and [Models API](/guides/models-api) for live model details.
+</Tip>
+
+## Image generation
+
+```python
+import base64
+import os
+
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.llm7.io/v1",
+    api_key=os.environ["LLM7_API_TOKEN"],
+)
+
+result = client.images.generate(
+    model="gpt-image-2",
+    prompt="A clean product photo of a matte black desk lamp on a white desk",
+    size="1024x1024",
+    n=1,
+)
+
+image_bytes = base64.b64decode(result.data[0].b64_json)
+with open("generated.png", "wb") as file:
+    file.write(image_bytes)
+```
+
+<Tip>
+See [Image generation and edits](/guides/image-generation) for edit examples, strict field validation, and normalized response details.
 </Tip>

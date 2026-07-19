@@ -1,0 +1,198 @@
+---
+title: "Image generation and edits"
+description: "Generate new images or edit reference images with the LLM7 Image API."
+icon: "image"
+---
+
+Use the Image API to generate new images from text prompts or edit one or more reference images. The image endpoints use the same base URL and Bearer token authentication as the rest of the LLM7 API.
+
+```text
+https://api.llm7.io/v1
+```
+
+```text
+Authorization: Bearer <LLM7_API_TOKEN>
+```
+
+<Warning>
+The Image API is intentionally strict. Unsupported fields are rejected on input, and successful responses are normalized so provider-only fields are not exposed.
+</Warning>
+
+## Generate a new image
+
+Send a JSON request to `POST /images/generations`.
+
+```bash
+curl https://api.llm7.io/v1/images/generations \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "prompt": "A clean product photo of a matte black desk lamp on a white desk",
+    "size": "1024x1024",
+    "n": 1
+  }'
+```
+
+### Request fields
+
+| Field | Required | Type | Notes |
+| --- | --- | --- | --- |
+| `model` | yes | string | Image model ID, for example `gpt-image-2` |
+| `prompt` | yes | string | Text instruction for the image |
+| `size` | no | string | For example `1024x1024`; support depends on the selected model |
+| `n` | no | integer | Only `1` is supported |
+
+Unsupported fields include `response_format`, `quality`, `style`, `background`, `output_format`, `mask`, and any other extra keys.
+
+### Python
+
+```python
+import base64
+import os
+
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LLM7_API_TOKEN"],
+    base_url="https://api.llm7.io/v1",
+)
+
+result = client.images.generate(
+    model="gpt-image-2",
+    prompt="A clean product photo of a matte black desk lamp on a white desk",
+    size="1024x1024",
+    n=1,
+)
+
+image_bytes = base64.b64decode(result.data[0].b64_json)
+with open("generated.png", "wb") as file:
+    file.write(image_bytes)
+```
+
+## Edit an image
+
+Send multipart form data to `POST /images/edits`. This endpoint supports instruction-based editing and inpainting from one or more reference images.
+
+The gateway contract does not support an explicit `mask` field. Send the source image as `image` and describe the desired edit in `prompt`.
+
+```bash
+curl https://api.llm7.io/v1/images/edits \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -F "model=gpt-image-2" \
+  -F "prompt=Replace the empty wall area with a framed abstract painting" \
+  -F "size=1024x1024" \
+  -F "image=@room.png"
+```
+
+### Request fields
+
+| Field | Required | Type | Notes |
+| --- | --- | --- | --- |
+| `model` | yes | text | Image model ID, for example `gpt-image-2` |
+| `prompt` | yes | text | Edit or inpaint instruction |
+| `size` | no | text | For example `1024x1024`; support depends on the selected model |
+| `image` | yes | file | Repeatable field for reference images |
+
+Current model metadata controls reference-image limits. For `gpt-image-2`, the gateway supports up to 3 reference images, with each image up to 8 MB.
+
+Unsupported form fields include `mask`, `response_format`, `quality`, `style`, `background`, `output_format`, and any other extra fields. Unsupported file field names are rejected; files must be sent as `image`.
+
+### Multiple reference images
+
+```bash
+curl https://api.llm7.io/v1/images/edits \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -F "model=gpt-image-2" \
+  -F "prompt=Apply the color palette from the second image to the chair in the first image" \
+  -F "image=@chair.png" \
+  -F "image=@palette.png"
+```
+
+### Python
+
+```python
+import base64
+import os
+
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["LLM7_API_TOKEN"],
+    base_url="https://api.llm7.io/v1",
+)
+
+with open("room.png", "rb") as image:
+    result = client.images.edit(
+        model="gpt-image-2",
+        image=image,
+        prompt="Replace the empty wall area with a framed abstract painting",
+        size="1024x1024",
+    )
+
+image_bytes = base64.b64decode(result.data[0].b64_json)
+with open("edited.png", "wb") as file:
+    file.write(image_bytes)
+```
+
+## Success response
+
+Generation and edit responses use the same normalized JSON shape:
+
+```json
+{
+  "data": [
+    {
+      "b64_json": "<base64-encoded image bytes>"
+    }
+  ],
+  "usage": {
+    "cost_usd": "0.01200000"
+  }
+}
+```
+
+Response contract:
+
+- `data` is always a list with exactly one item.
+- `data[0].b64_json` is the generated or edited image encoded as base64.
+- `usage.cost_usd` is a decimal USD string for the billed request when cost is available.
+- URL image output is not supported.
+- Extra upstream fields such as `url`, `created`, `revised_prompt`, or provider metadata are not returned.
+
+Decode the image:
+
+```python
+import base64
+
+image_bytes = base64.b64decode(response.data[0].b64_json)
+```
+
+## Error responses
+
+Gateway errors follow an OpenAI-style error object:
+
+```json
+{
+  "error": {
+    "message": "Upstream provider returned an invalid response.",
+    "type": "upstream_invalid_response",
+    "param": null,
+    "code": "upstream_invalid_response"
+  }
+}
+```
+
+Common cases:
+
+| HTTP status | Code | Meaning |
+| --- | --- | --- |
+| `400` | `invalid_request` or `upstream_bad_request` | Invalid gateway request or upstream rejected the request |
+| `401` | `missing_api_key` or `invalid_api_key` | Missing or invalid LLM7 token |
+| `402` | `insufficient_balance` | No available balance or allowance |
+| `413` | `invalid_request` or `reference image too large` | Request body or reference image is too large |
+| `429` | `rate_limit_exceeded` or `upstream_rate_limited` | Gateway or upstream rate limit |
+| `502` | `upstream_invalid_response` | Upstream success response did not match the image contract |
+| `503` | `upstream_unavailable` | Upstream provider is temporarily unavailable |
+
+The gateway does not expose raw upstream error bodies to clients.
