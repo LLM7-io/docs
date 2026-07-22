@@ -23,6 +23,7 @@ The endpoint returns an OpenAI-compatible list object:
     {
       "id": "gpt-5.4",
       "object": "model",
+      "model_type": "chat",
       "created": 1782277907,
       "owned_by": "",
       "tier": "pro",
@@ -67,6 +68,10 @@ The endpoint returns an OpenAI-compatible list object:
   The model ID to pass as `model`. Chat workflows can also use selectors such as `default`, `fast`, and `pro` where supported. Image generation and edit workflows require a concrete image model ID, such as `gpt-image-2`.
 </ResponseField>
 
+<ResponseField name="data[].model_type" type="string">
+  The broad model family or endpoint type. Video-capable models use `model_type: "video"`.
+</ResponseField>
+
 <ResponseField name="data[].tier" type="string">
   The access tier for the model.
 
@@ -87,6 +92,10 @@ The endpoint returns an OpenAI-compatible list object:
   Output-token price in the listed `currency` and `unit`.
 </ResponseField>
 
+<ResponseField name="data[].pricing.price" type="number">
+  Per-unit price for non-token billing modes. Video models with `pricing_mode: "second"` use this as the public USD price per generated second.
+</ResponseField>
+
 <ResponseField name="data[].pricing.currency" type="string">
   The pricing currency, for example `USD`.
 </ResponseField>
@@ -104,11 +113,11 @@ The endpoint returns an OpenAI-compatible list object:
 </ResponseField>
 
 <ResponseField name="data[].pricing_mode" type="string">
-  How pricing is calculated. `token` means usage is priced from input and output token counts.
+  How pricing is calculated. `token` means usage is priced from input and output token counts. `second` means generated media is priced per second using `pricing.price`.
 </ResponseField>
 
 <ResponseField name="data[].modalities" type="object">
-  Input and output types supported by the model. Models with `image` in `modalities.input` can accept image inputs for vision workflows. Models with `image` in `modalities.output` can produce image outputs through image endpoints.
+  Input and output types supported by the model. Models with `image` in `modalities.input` can accept image inputs for vision or reference workflows. Models with `image` in `modalities.output` can produce image outputs through image endpoints. Models with `video` in `modalities.output` can produce video outputs through the Video API.
 </ResponseField>
 
 <ResponseField name="data[].context_window" type="object">
@@ -133,6 +142,10 @@ The endpoint returns an OpenAI-compatible list object:
 
 <ResponseField name="data[].tools_calling" type="boolean">
   Whether the model supports tool and function calling.
+</ResponseField>
+
+<ResponseField name="data[].capabilities" type="object">
+  Endpoint-specific capability metadata. Video models expose fields such as `video_generation`, `video_async`, `supported_seconds`, `supported_sizes`, `max_reference_images`, `max_reference_image_bytes`, and `requires_reference_image`.
 </ResponseField>
 
 ## Access and limits
@@ -166,6 +179,45 @@ charged_cost = max(cost, pricing.minimum_request_price_usd)
 
 Use the live `currency` and `unit` fields instead of assuming all models share the same pricing unit forever.
 
+For video models with `pricing_mode: "second"`, estimate the reserved hold from the requested duration:
+
+```txt
+reserved_hold = seconds * pricing.price
+```
+
+The hold is consumed when video generation completes successfully and released when upstream generation fails or task creation is not accepted.
+
+## Video model records
+
+Video-capable models are listed with `model_type: "video"` and asynchronous video generation capabilities:
+
+```json
+{
+  "id": "gemini-veo31",
+  "object": "model",
+  "model_type": "video",
+  "pricing_mode": "second",
+  "pricing": {
+    "price": 0.01875,
+    "currency": "USD",
+    "unit": "second"
+  },
+  "modalities": {
+    "input": ["text", "image"],
+    "output": ["video"]
+  },
+  "capabilities": {
+    "video_generation": true,
+    "video_async": true,
+    "supported_seconds": [4, 6, 8],
+    "supported_sizes": ["1280x720", "720x1280", "1920x1080"],
+    "max_reference_images": 2,
+    "max_reference_image_bytes": 8388608,
+    "requires_reference_image": false
+  }
+}
+```
+
 ## Choosing a model programmatically
 
 Use the live fields instead of hard-coding model names:
@@ -182,6 +234,12 @@ const imageOutputModels = models.filter((model) =>
   model.modalities?.output?.includes("image")
 );
 
+const videoModels = models.filter(
+  (model) =>
+    model.model_type === "video" &&
+    model.capabilities?.video_generation === true
+);
+
 const jsonStreamingModels = models.filter(
   (model) => model.json_mode && model.stream
 );
@@ -191,4 +249,4 @@ const affordableProModels = models.filter(
 );
 ```
 
-For most chat integrations, start with the selectors in [Available models](/guides/models). Use this endpoint when you need to display live options, filter by capability, estimate cost, or validate that a specific model ID is still available. For image workflows, use a concrete image model ID with the [Image generation and edits](/guides/image-generation) endpoints.
+For most chat integrations, start with the selectors in [Available models](/guides/models). Use this endpoint when you need to display live options, filter by capability, estimate cost, or validate that a specific model ID is still available. For image workflows, use a concrete image model ID with the [Image generation and edits](/guides/image-generation) endpoints. For video workflows, use a concrete video model ID with the [Video generation](/guides/video-generation) endpoint.

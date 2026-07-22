@@ -11,7 +11,7 @@ https://api.llm7.io/v1
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens.
+Usage endpoints are authenticated using Bearer tokens. The model catalog can be listed without a token.
 
 ```json
 "security": [
@@ -21,6 +21,14 @@ All API endpoints are authenticated using Bearer tokens.
 ]
 ```
 
+<Card title="Models API" icon="list" href="/guides/models-api">
+  Read the live model catalog, pricing metadata, modalities, and capability flags.
+</Card>
+
 <Card title="Image generation and edits" icon="image" href="/guides/image-generation">
   Read the guide for curl examples, Python examples, response handling, and error behavior.
+</Card>
+
+<Card title="Video generation" icon="video" href="/guides/video-generation">
+  Create asynchronous video tasks, poll status, and download completed MP4 content.
 </Card>

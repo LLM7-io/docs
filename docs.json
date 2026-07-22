@@ -39,6 +39,12 @@
             ]
           },
           {
+            "group": "Videos",
+            "pages": [
+              "guides/video-generation"
+            ]
+          },
+          {
             "group": "AI tools",
             "pages": [
               "ai-tools/cursor"
@@ -56,10 +62,24 @@
             ]
           },
           {
+            "group": "Models",
+            "pages": [
+              "api-reference/endpoint/models-list"
+            ]
+          },
+          {
             "group": "Images",
             "pages": [
               "api-reference/endpoint/images-generations",
               "api-reference/endpoint/images-edits"
+            ]
+          },
+          {
+            "group": "Videos",
+            "pages": [
+              "api-reference/endpoint/videos-create",
+              "api-reference/endpoint/videos-retrieve",
+              "api-reference/endpoint/videos-content"
             ]
           }
         ]

@@ -1,0 +1,176 @@
+---
+title: "Video generation"
+description: "Create asynchronous text-to-video and image-to-video tasks with the LLM7 Video API."
+icon: "video"
+---
+
+Use the Video API to create asynchronous video generation tasks, poll their status, and download the completed MP4 file. Video endpoints use the same base URL and Bearer token authentication as the rest of the LLM7 API.
+
+```text
+https://api.llm7.io/v1
+```
+
+```text
+Authorization: Bearer <LLM7_API_TOKEN>
+```
+
+## Discover video models
+
+List the live model catalog:
+
+```bash
+curl https://api.llm7.io/v1/models
+```
+
+Video-capable models have `model_type: "video"`, `pricing_mode: "second"`, `modalities.output: ["video"]`, and `capabilities.video_generation: true`.
+
+```json
+{
+  "id": "gemini-veo31",
+  "object": "model",
+  "model_type": "video",
+  "pricing_mode": "second",
+  "pricing": {
+    "price": 0.01875,
+    "currency": "USD",
+    "unit": "second"
+  },
+  "modalities": {
+    "input": ["text", "image"],
+    "output": ["video"]
+  },
+  "capabilities": {
+    "video_generation": true,
+    "video_async": true,
+    "supported_seconds": [4, 6, 8],
+    "supported_sizes": ["1280x720", "720x1280", "1920x1080"],
+    "max_reference_images": 2,
+    "max_reference_image_bytes": 8388608,
+    "requires_reference_image": false
+  }
+}
+```
+
+Use these fields to validate `seconds`, `size`, and reference-image limits before creating a task.
+
+## Create a text-to-video task
+
+Send JSON to `POST /videos` when the request has no reference images.
+
+```bash
+curl https://api.llm7.io/v1/videos \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-veo31",
+    "prompt": "Waves crashing on rocks, cinematic slow motion",
+    "seconds": "6",
+    "size": "1280x720"
+  }'
+```
+
+### Request fields
+
+| Field | Required | Type | Notes |
+| --- | --- | --- | --- |
+| `model` | yes | string | Video model ID from `/v1/models` |
+| `prompt` | yes | string | Text instruction for the video |
+| `seconds` | yes | string | Must match one of `capabilities.supported_seconds` |
+| `size` | no | string | Must match one of `capabilities.supported_sizes` when provided |
+
+The response contains the asynchronous task ID:
+
+```json
+{
+  "id": "video_task_id",
+  "status": "queued"
+}
+```
+
+## Create an image-to-video task
+
+Use `multipart/form-data` when sending reference images. Send each reference image with the repeated field name `input_reference`.
+
+```bash
+curl https://api.llm7.io/v1/videos \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -F "model=gemini-veo31" \
+  -F "prompt=Animate this first frame" \
+  -F "seconds=6" \
+  -F "size=1280x720" \
+  -F "input_reference=@first-frame.png"
+```
+
+For multiple references:
+
+```bash
+curl https://api.llm7.io/v1/videos \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -F "model=gemini-veo31" \
+  -F "prompt=Blend these references into a smooth cinematic shot" \
+  -F "seconds=6" \
+  -F "size=1280x720" \
+  -F "input_reference=@first-frame.png" \
+  -F "input_reference=@style-reference.png"
+```
+
+Reference image count must not exceed `capabilities.max_reference_images`, and each file must not exceed `capabilities.max_reference_image_bytes`. If `capabilities.requires_reference_image` is `true`, include at least one `input_reference`.
+
+## Poll task status
+
+Poll `GET /videos/{id}` until the task reaches `completed` or `failed`.
+
+```bash
+curl https://api.llm7.io/v1/videos/video_task_id \
+  -H "Authorization: Bearer $LLM7_API_TOKEN"
+```
+
+```json
+{
+  "id": "video_task_id",
+  "status": "queued"
+}
+```
+
+Possible statuses:
+
+| Status | Meaning |
+| --- | --- |
+| `queued` | The task is waiting to start |
+| `in_progress` | The upstream provider is generating the video |
+| `completed` | The MP4 is ready to download |
+| `failed` | The task failed and the reserved hold is released |
+
+Only the same authenticated user who created the task can poll it.
+
+## Download the completed video
+
+After the task is `completed`, download the MP4 bytes from `GET /videos/{id}/content`.
+
+```bash
+curl https://api.llm7.io/v1/videos/video_task_id/content \
+  -H "Authorization: Bearer $LLM7_API_TOKEN" \
+  -o output.mp4
+```
+
+Successful responses return `Content-Type: video/mp4` with binary MP4 bytes. If the task is not completed yet, the endpoint returns an error.
+
+## Validation and billing
+
+Validation is based on the selected model record from `/v1/models`:
+
+- `seconds` must be listed in `capabilities.supported_seconds`.
+- `size`, if provided, must be listed in `capabilities.supported_sizes`.
+- Reference image count must not exceed `capabilities.max_reference_images`.
+- Each reference image must not exceed `capabilities.max_reference_image_bytes`.
+- If `capabilities.requires_reference_image` is `true`, at least one `input_reference` is required.
+- Use JSON only when there are no reference images.
+- Use `multipart/form-data` when reference images are present.
+
+Video generation is billed asynchronously with a hold. On `POST /v1/videos`, the full cost is reserved:
+
+```text
+seconds * pricing.price
+```
+
+If the video completes successfully, the hold is consumed and the user is charged even if the client never polls the task. If the upstream task fails or task creation is not accepted, the hold is released.

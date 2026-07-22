@@ -1,6 +1,6 @@
 ---
 title: "Limits"
-description: "Rate, token-usage, and image endpoint limits by plan."
+description: "Rate, token-usage, image, and video endpoint limits by plan."
 ---
 
 Limits vary by access type, plan, endpoint, and model availability.
@@ -42,6 +42,26 @@ Image requests require a valid LLM7 API token and are billed from available allo
 | `gpt-image-2` reference image size | Up to 8 MB per image |
 
 Image model metadata controls supported sizes, reference-image limits, and availability. Successful image responses include `usage.cost_usd` when billed cost is available.
+
+## Video API (/v1/videos)
+
+Video requests require a valid LLM7 API token and are billed asynchronously from available allowance or balance.
+
+| Limit | Source |
+| ----- | ----- |
+| Allowed duration values | `capabilities.supported_seconds` |
+| Allowed output sizes | `capabilities.supported_sizes` |
+| Reference image count | `capabilities.max_reference_images` |
+| Reference image size | `capabilities.max_reference_image_bytes` |
+| Required reference image | `capabilities.requires_reference_image` |
+
+On task creation, the full estimated cost is reserved as a hold:
+
+```text
+seconds * pricing.price
+```
+
+The hold is consumed when the task completes successfully and released when upstream generation fails or task creation is not accepted.
 
 <Note>
 Use the [Models API](/guides/models-api) to inspect live model tiers, pricing, context windows, and capability flags. Get a free token at [dash.llm7.io](https://dash.llm7.io) or upgrade to Pro for higher caps.

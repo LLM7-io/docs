@@ -15,7 +15,7 @@ For most chat applications, use a selector or a live model ID from the Models AP
 - `pro`: higher-quality paid model with larger limits or advanced capabilities
 - a concrete model ID, such as `gpt-5.4`, when you need to pin routing, behavior, or cost
 
-For image generation and edits, pass a concrete image model ID such as `gpt-image-2` to the Image API. Chat selectors such as `default`, `fast`, and `pro` are intended for chat workflows.
+For image generation, image edits, and video generation, pass a concrete media model ID such as `gpt-image-2` or `gemini-veo31`. Chat selectors such as `default`, `fast`, and `pro` are intended for chat workflows.
 
 ```python
 resp = client.chat.completions.create(
@@ -41,6 +41,7 @@ The response is a live catalog. Do not assume a model ID will always be present.
     {
       "id": "gpt-5.4",
       "object": "model",
+      "model_type": "chat",
       "tier": "pro",
       "pricing": {
         "input": 0.5,
@@ -73,6 +74,7 @@ For example:
 ```js
 const supportsVision = model.modalities?.input?.includes("image");
 const supportsImageOutput = model.modalities?.output?.includes("image");
+const supportsVideoOutput = model.modalities?.output?.includes("video");
 const supportsTools = model.tools_calling === true;
 const supportsJson = model.json_mode === true;
 ```

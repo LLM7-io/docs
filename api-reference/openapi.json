@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "LLM7 Image API",
-    "description": "Generate and edit images through the LLM7 gateway.",
+    "title": "LLM7 API",
+    "description": "Discover models, generate and edit images, and create asynchronous video generation tasks through the LLM7 gateway.",
     "version": "1.0.0"
   },
   "servers": [
@@ -16,6 +16,187 @@
     }
   ],
   "paths": {
+    "/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "List models",
+        "description": "List the live model catalog, including pricing, modalities, and capability metadata.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Model catalog response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelListResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          }
+        }
+      }
+    },
+    "/videos": {
+      "post": {
+        "operationId": "createVideoTask",
+        "summary": "Create video task",
+        "description": "Create an asynchronous text-to-video or image-to-video task. Use JSON when there are no reference images and multipart/form-data when reference images are present.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoCreateJsonRequest"
+              },
+              "examples": {
+                "textToVideo": {
+                  "summary": "Text to video",
+                  "value": {
+                    "model": "gemini-veo31",
+                    "prompt": "Waves crashing on rocks, cinematic slow motion",
+                    "seconds": "6",
+                    "size": "1280x720"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoCreateMultipartRequest"
+              },
+              "encoding": {
+                "input_reference": {
+                  "contentType": "image/png, image/jpeg, image/webp"
+                }
+              },
+              "examples": {
+                "imageToVideo": {
+                  "summary": "Image to video",
+                  "value": {
+                    "model": "gemini-veo31",
+                    "prompt": "Animate this first frame",
+                    "seconds": "6",
+                    "size": "1280x720"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Queued video task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoTaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/InsufficientBalance"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamInvalidResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}": {
+      "get": {
+        "operationId": "retrieveVideoTask",
+        "summary": "Retrieve video task",
+        "description": "Poll a video generation task until it reaches completed or failed.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/VideoTaskId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Video task status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoTaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          }
+        }
+      }
+    },
+    "/videos/{id}/content": {
+      "get": {
+        "operationId": "downloadVideoContent",
+        "summary": "Download video content",
+        "description": "Download completed video content as binary MP4 bytes. If the task is not completed yet, the endpoint returns an error.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/VideoTaskId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary MP4 video content",
+            "content": {
+              "video/mp4": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          }
+        }
+      }
+    },
     "/images/generations": {
       "post": {
         "operationId": "createImageGeneration",
@@ -150,7 +331,323 @@
         "scheme": "bearer"
       }
     },
+    "parameters": {
+      "VideoTaskId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Video task ID returned by POST /videos."
+      }
+    },
     "schemas": {
+      "ModelListResponse": {
+        "type": "object",
+        "required": [
+          "object",
+          "data"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "Response container type.",
+            "example": "list"
+          },
+          "data": {
+            "type": "array",
+            "description": "Live model records.",
+            "items": {
+              "$ref": "#/components/schemas/ModelRecord"
+            }
+          }
+        }
+      },
+      "ModelRecord": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "object"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Model ID to pass as model.",
+            "example": "gemini-veo31"
+          },
+          "object": {
+            "type": "string",
+            "example": "model"
+          },
+          "created": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Creation timestamp when available."
+          },
+          "owned_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Access tier when applicable."
+          },
+          "model_type": {
+            "type": "string",
+            "description": "Broad model family or endpoint type. Video-capable models use video.",
+            "example": "video"
+          },
+          "pricing_mode": {
+            "type": "string",
+            "description": "Pricing calculation mode. Token-priced models use token; video models use second."
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/ModelPricing"
+          },
+          "modalities": {
+            "$ref": "#/components/schemas/ModelModalities"
+          },
+          "context_window": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "usage_based_only": {
+            "type": "boolean"
+          },
+          "stream": {
+            "type": "boolean"
+          },
+          "json_mode": {
+            "type": "boolean"
+          },
+          "reasoning": {
+            "type": "boolean"
+          },
+          "tools_calling": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/ModelCapabilities"
+          }
+        }
+      },
+      "ModelPricing": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "input": {
+            "type": "number",
+            "description": "Input-token price for token-priced models."
+          },
+          "output": {
+            "type": "number",
+            "description": "Output-token price for token-priced models."
+          },
+          "price": {
+            "type": "number",
+            "description": "Per-unit price for non-token pricing modes. Video models use public USD price per generated second.",
+            "example": 0.01875
+          },
+          "minimum_request_price_usd": {
+            "type": "number"
+          },
+          "minimum_cache_tokens": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "unit": {
+            "type": "string",
+            "example": "second"
+          }
+        }
+      },
+      "ModelModalities": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text",
+              "image"
+            ]
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "video"
+            ]
+          }
+        }
+      },
+      "ModelCapabilities": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "video_generation": {
+            "type": "boolean",
+            "description": "Whether the model can generate video."
+          },
+          "video_async": {
+            "type": "boolean",
+            "description": "Whether video generation is asynchronous."
+          },
+          "supported_seconds": {
+            "type": "array",
+            "description": "Allowed seconds values for video generation.",
+            "items": {
+              "type": "integer"
+            },
+            "example": [
+              4,
+              6,
+              8
+            ]
+          },
+          "supported_sizes": {
+            "type": "array",
+            "description": "Allowed output sizes for video generation.",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "1280x720",
+              "720x1280",
+              "1920x1080"
+            ]
+          },
+          "max_reference_images": {
+            "type": "integer",
+            "description": "Maximum number of uploaded reference images."
+          },
+          "max_reference_image_bytes": {
+            "type": "integer",
+            "description": "Maximum bytes per uploaded reference image.",
+            "example": 8388608
+          },
+          "requires_reference_image": {
+            "type": "boolean",
+            "description": "Whether at least one input_reference file is required."
+          }
+        }
+      },
+      "VideoCreateJsonRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model",
+          "prompt",
+          "seconds",
+          "input_reference"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Video model ID.",
+            "example": "gemini-veo31"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Text instruction for the video.",
+            "example": "Waves crashing on rocks, cinematic slow motion"
+          },
+          "seconds": {
+            "type": "string",
+            "description": "Requested duration. Must be listed in the selected model's capabilities.supported_seconds.",
+            "example": "6"
+          },
+          "size": {
+            "type": "string",
+            "description": "Requested output size. Must be listed in the selected model's capabilities.supported_sizes when provided.",
+            "example": "1280x720"
+          }
+        }
+      },
+      "VideoCreateMultipartRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model",
+          "prompt",
+          "seconds"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Video model ID.",
+            "example": "gemini-veo31"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Text instruction for the video.",
+            "example": "Animate this first frame"
+          },
+          "seconds": {
+            "type": "string",
+            "description": "Requested duration. Must be listed in the selected model's capabilities.supported_seconds.",
+            "example": "6"
+          },
+          "size": {
+            "type": "string",
+            "description": "Requested output size. Must be listed in the selected model's capabilities.supported_sizes when provided.",
+            "example": "1280x720"
+          },
+          "input_reference": {
+            "type": "array",
+            "description": "Reference images. Send each file with the repeated field name input_reference.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "VideoTaskResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Video task ID.",
+            "example": "video_task_id"
+          },
+          "status": {
+            "type": "string",
+            "description": "Video task status.",
+            "enum": [
+              "queued",
+              "in_progress",
+              "completed",
+              "failed"
+            ],
+            "example": "queued"
+          }
+        }
+      },
       "ImageGenerationRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -348,7 +845,7 @@
         }
       },
       "UpstreamInvalidResponse": {
-        "description": "Upstream success response did not match the image contract.",
+        "description": "Upstream success response did not match the endpoint contract.",
         "content": {
           "application/json": {
             "schema": {
