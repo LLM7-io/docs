@@ -47,6 +47,11 @@
         "operationId": "createVideoTask",
         "summary": "Create video task",
         "description": "Create an asynchronous text-to-video or image-to-video task. Use JSON when there are no reference images and multipart/form-data when reference images are present.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -58,10 +63,12 @@
                 "textToVideo": {
                   "summary": "Text to video",
                   "value": {
-                    "model": "gemini-veo31",
+                    "model": "seedance-2.0-mini",
+                    "request_type": "text-to-video",
+                    "duration": 8,
+                    "resolution": "720p",
                     "prompt": "Waves crashing on rocks, cinematic slow motion",
-                    "seconds": "6",
-                    "size": "1280x720"
+                    "client_request_id": "video-demo-001"
                   }
                 }
               }
@@ -79,10 +86,12 @@
                 "imageToVideo": {
                   "summary": "Image to video",
                   "value": {
-                    "model": "gemini-veo31",
+                    "model": "seedance-2.0-mini",
+                    "request_type": "image-to-video",
+                    "duration": 8,
+                    "resolution": "720p",
                     "prompt": "Animate this first frame",
-                    "seconds": "6",
-                    "size": "1280x720"
+                    "client_request_id": "image-video-demo-001"
                   }
                 }
               }
@@ -96,6 +105,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VideoTaskResponse"
+                },
+                "examples": {
+                  "queued": {
+                    "summary": "Queued task",
+                    "value": {
+                      "id": "video_task_id",
+                      "status": "queued",
+                      "outputs": []
+                    }
+                  }
                 }
               }
             }
@@ -128,7 +147,7 @@
       "get": {
         "operationId": "retrieveVideoTask",
         "summary": "Retrieve video task",
-        "description": "Poll a video generation task until it reaches completed or failed.",
+        "description": "Poll a video generation task until it reaches completed, failed, or timeout.",
         "parameters": [
           {
             "$ref": "#/components/parameters/VideoTaskId"
@@ -141,6 +160,37 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VideoTaskResponse"
+                },
+                "examples": {
+                  "inProgress": {
+                    "summary": "In progress task",
+                    "value": {
+                      "id": "video_task_id",
+                      "status": "in_progress",
+                      "outputs": []
+                    }
+                  },
+                  "completed": {
+                    "summary": "Completed task",
+                    "value": {
+                      "id": "video_task_id",
+                      "status": "completed",
+                      "outputs": [
+                        "https://storage.example/output/video_task_id.mp4"
+                      ]
+                    }
+                  },
+                  "failed": {
+                    "summary": "Failed task",
+                    "value": {
+                      "id": "video_task_id",
+                      "status": "failed",
+                      "outputs": [],
+                      "error": {
+                        "message": "Upstream generation failed."
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -164,7 +214,7 @@
       "get": {
         "operationId": "downloadVideoContent",
         "summary": "Download video content",
-        "description": "Download completed video content as binary MP4 bytes. If the task is not completed yet, the endpoint returns an error.",
+        "description": "Download completed video content as binary MP4 bytes or follow a redirect to the output URL for Atlas-backed tasks. If the task is not completed yet, the endpoint returns an error.",
         "parameters": [
           {
             "$ref": "#/components/parameters/VideoTaskId"
@@ -178,6 +228,30 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Redirect to the completed output URL.",
+            "headers": {
+              "Location": {
+                "description": "Completed video output URL.",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "307": {
+            "description": "Temporary redirect to the completed output URL.",
+            "headers": {
+              "Location": {
+                "description": "Completed video output URL.",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
                 }
               }
             }
@@ -340,6 +414,15 @@
           "type": "string"
         },
         "description": "Video task ID returned by POST /videos."
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Client-generated idempotency key for safe retries of the same logical video task creation request."
       }
     },
     "schemas": {
@@ -375,7 +458,7 @@
           "id": {
             "type": "string",
             "description": "Model ID to pass as model.",
-            "example": "gemini-veo31"
+            "example": "seedance-2.0-mini"
           },
           "object": {
             "type": "string",
@@ -408,7 +491,7 @@
           },
           "pricing_mode": {
             "type": "string",
-            "description": "Pricing calculation mode. Token-priced models use token; video models use second."
+            "description": "Pricing calculation mode. Token-priced models use token; video models use second with route-level prices when available."
           },
           "pricing": {
             "$ref": "#/components/schemas/ModelPricing"
@@ -457,8 +540,33 @@
           },
           "price": {
             "type": "number",
-            "description": "Per-unit price for non-token pricing modes. Video models use public USD price per generated second.",
-            "example": 0.01875
+            "description": "Compatible, base, or minimum per-unit price for non-token pricing modes. Video models can use route-level prices as the source of truth.",
+            "example": 0.01
+          },
+          "route_prices_usd_per_second": {
+            "type": "array",
+            "description": "Route-level public USD prices per generated second for video models.",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "route": {
+                  "type": "string",
+                  "description": "Route or model route identifier.",
+                  "example": "seedance-2.0-mini"
+                },
+                "request_type": {
+                  "type": "string",
+                  "description": "Video request type for this route price.",
+                  "example": "text-to-video"
+                },
+                "public_price_usd_per_second": {
+                  "type": "number",
+                  "description": "Public USD price per generated second for the selected route.",
+                  "example": 0.01
+                }
+              }
+            }
           },
           "minimum_request_price_usd": {
             "type": "number"
@@ -519,8 +627,7 @@
               "type": "integer"
             },
             "example": [
-              4,
-              6,
+              5,
               8
             ]
           },
@@ -531,9 +638,9 @@
               "type": "string"
             },
             "example": [
-              "1280x720",
-              "720x1280",
-              "1920x1080"
+              "480p",
+              "720p",
+              "1080p"
             ]
           },
           "max_reference_images": {
@@ -548,6 +655,18 @@
           "requires_reference_image": {
             "type": "boolean",
             "description": "Whether at least one input_reference file is required."
+          },
+          "atlascloud_video": {
+            "type": "boolean",
+            "description": "Whether the video model is backed by Atlas routes."
+          },
+          "atlascloud_routes": {
+            "type": "array",
+            "description": "Atlas route metadata for video generation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
           }
         }
       },
@@ -556,30 +675,68 @@
         "additionalProperties": false,
         "required": [
           "model",
-          "prompt",
-          "seconds",
-          "input_reference"
+          "request_type",
+          "prompt"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "duration"
+            ]
+          },
+          {
+            "required": [
+              "seconds"
+            ]
+          }
         ],
         "properties": {
           "model": {
             "type": "string",
             "description": "Video model ID.",
-            "example": "gemini-veo31"
+            "example": "seedance-2.0-mini"
+          },
+          "request_type": {
+            "type": "string",
+            "description": "Video request type, such as text-to-video or image-to-video.",
+            "enum": [
+              "text-to-video",
+              "image-to-video"
+            ],
+            "example": "text-to-video"
           },
           "prompt": {
             "type": "string",
             "description": "Text instruction for the video.",
             "example": "Waves crashing on rocks, cinematic slow motion"
           },
+          "duration": {
+            "type": "number",
+            "description": "Requested duration in seconds. Must be listed in the selected model's capabilities.supported_seconds.",
+            "example": 8
+          },
           "seconds": {
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Compatibility alias for duration.",
+            "example": 8
+          },
+          "resolution": {
             "type": "string",
-            "description": "Requested duration. Must be listed in the selected model's capabilities.supported_seconds.",
-            "example": "6"
+            "description": "Requested output resolution. Must be listed in the selected model's capabilities.supported_sizes when provided.",
+            "example": "720p"
           },
           "size": {
             "type": "string",
-            "description": "Requested output size. Must be listed in the selected model's capabilities.supported_sizes when provided.",
+            "description": "Compatibility alias for resolution. Legacy models can expose exact sizes such as 1280x720.",
             "example": "1280x720"
+          },
+          "client_request_id": {
+            "type": "string",
+            "description": "Client-generated request ID for tracing and retry correlation.",
+            "example": "video-demo-001"
           }
         }
       },
@@ -588,29 +745,69 @@
         "additionalProperties": false,
         "required": [
           "model",
+          "request_type",
           "prompt",
-          "seconds"
+          "input_reference"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "duration"
+            ]
+          },
+          {
+            "required": [
+              "seconds"
+            ]
+          }
         ],
         "properties": {
           "model": {
             "type": "string",
             "description": "Video model ID.",
-            "example": "gemini-veo31"
+            "example": "seedance-2.0-mini"
+          },
+          "request_type": {
+            "type": "string",
+            "description": "Video request type, such as text-to-video or image-to-video.",
+            "enum": [
+              "text-to-video",
+              "image-to-video"
+            ],
+            "example": "image-to-video"
           },
           "prompt": {
             "type": "string",
             "description": "Text instruction for the video.",
             "example": "Animate this first frame"
           },
+          "duration": {
+            "type": "number",
+            "description": "Requested duration in seconds. Must be listed in the selected model's capabilities.supported_seconds.",
+            "example": 8
+          },
           "seconds": {
+            "type": [
+              "number",
+              "string"
+            ],
+            "description": "Compatibility alias for duration.",
+            "example": 8
+          },
+          "resolution": {
             "type": "string",
-            "description": "Requested duration. Must be listed in the selected model's capabilities.supported_seconds.",
-            "example": "6"
+            "description": "Requested output resolution. Must be listed in the selected model's capabilities.supported_sizes when provided.",
+            "example": "720p"
           },
           "size": {
             "type": "string",
-            "description": "Requested output size. Must be listed in the selected model's capabilities.supported_sizes when provided.",
+            "description": "Compatibility alias for resolution. Legacy models can expose exact sizes such as 1280x720.",
             "example": "1280x720"
+          },
+          "client_request_id": {
+            "type": "string",
+            "description": "Client-generated request ID for tracing and retry correlation.",
+            "example": "image-video-demo-001"
           },
           "input_reference": {
             "type": "array",
@@ -642,9 +839,34 @@
               "queued",
               "in_progress",
               "completed",
-              "failed"
+              "failed",
+              "timeout"
             ],
             "example": "queued"
+          },
+          "outputs": {
+            "type": "array",
+            "description": "Completed output URLs. Empty or omitted until the task is completed.",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "example": [
+              "https://storage.example/output/video_task_id.mp4"
+            ]
+          },
+          "error": {
+            "type": "object",
+            "description": "Task error details for failed or timed-out tasks.",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Upstream generation failed."
+              }
+            }
           }
         }
       },

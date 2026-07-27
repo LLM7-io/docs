@@ -4,7 +4,7 @@ description: "Create asynchronous text-to-video and image-to-video tasks with th
 icon: "video"
 ---
 
-Use the Video API to create asynchronous video generation tasks, poll their status, and download the completed MP4 file. Video endpoints use the same base URL and Bearer token authentication as the rest of the LLM7 API.
+Use the Video API to create asynchronous video generation tasks, poll their status, and download the completed output. Video endpoints use the same base URL and Bearer token authentication as the rest of the LLM7 API.
 
 ```text
 https://api.llm7.io/v1
@@ -22,18 +22,25 @@ List the live model catalog:
 curl https://api.llm7.io/v1/models
 ```
 
-Video-capable models have `model_type: "video"`, `pricing_mode: "second"`, `modalities.output: ["video"]`, and `capabilities.video_generation: true`.
+Video-capable models have `model_type: "video"`, `pricing_mode: "second"`, `modalities.output: ["video"]`, and `capabilities.video_generation: true`. Atlas-backed models also expose `capabilities.atlascloud_video`, `capabilities.atlascloud_routes`, and route-level per-second prices.
 
 ```json
 {
-  "id": "gemini-veo31",
+  "id": "seedance-2.0-mini",
   "object": "model",
   "model_type": "video",
   "pricing_mode": "second",
   "pricing": {
-    "price": 0.01875,
+    "price": 0.01,
     "currency": "USD",
-    "unit": "second"
+    "unit": "second",
+    "route_prices_usd_per_second": [
+      {
+        "route": "seedance-2.0-mini",
+        "request_type": "text-to-video",
+        "public_price_usd_per_second": 0.01
+      }
+    ]
   },
   "modalities": {
     "input": ["text", "image"],
@@ -42,16 +49,23 @@ Video-capable models have `model_type: "video"`, `pricing_mode: "second"`, `moda
   "capabilities": {
     "video_generation": true,
     "video_async": true,
-    "supported_seconds": [4, 6, 8],
-    "supported_sizes": ["1280x720", "720x1280", "1920x1080"],
+    "supported_seconds": [5, 8],
+    "supported_sizes": ["480p", "720p", "1080p"],
     "max_reference_images": 2,
     "max_reference_image_bytes": 8388608,
-    "requires_reference_image": false
+    "requires_reference_image": false,
+    "atlascloud_video": true,
+    "atlascloud_routes": [
+      {
+        "route": "seedance-2.0-mini",
+        "request_types": ["text-to-video", "image-to-video"]
+      }
+    ]
   }
 }
 ```
 
-Use these fields to validate `seconds`, `size`, and reference-image limits before creating a task.
+Use these fields to validate duration, resolution, request type, route choice, and reference-image limits before creating a task. Seedance model IDs include `seedance-2.0-mini` and `seedance-2.0-fast`; inspect `/v1/models` for the live set of supported durations, resolutions, and routes.
 
 ## Create a text-to-video task
 
@@ -61,12 +75,27 @@ Send JSON to `POST /videos` when the request has no reference images.
 curl https://api.llm7.io/v1/videos \
   -H "Authorization: Bearer $LLM7_API_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: video-demo-001" \
   -d '{
-    "model": "gemini-veo31",
+    "model": "seedance-2.0-mini",
+    "request_type": "text-to-video",
+    "duration": 8,
+    "resolution": "720p",
     "prompt": "Waves crashing on rocks, cinematic slow motion",
-    "seconds": "6",
-    "size": "1280x720"
+    "client_request_id": "video-demo-001"
   }'
+```
+
+For a faster route, use the fast model ID with the same request shape:
+
+```json
+{
+  "model": "seedance-2.0-fast",
+  "request_type": "text-to-video",
+  "duration": 8,
+  "resolution": "720p",
+  "prompt": "A neon-lit city street after rain"
+}
 ```
 
 ### Request fields
@@ -75,15 +104,22 @@ curl https://api.llm7.io/v1/videos \
 | --- | --- | --- | --- |
 | `model` | yes | string | Video model ID from `/v1/models` |
 | `prompt` | yes | string | Text instruction for the video |
-| `seconds` | yes | string | Must match one of `capabilities.supported_seconds` |
-| `size` | no | string | Must match one of `capabilities.supported_sizes` when provided |
+| `request_type` | yes | string | Use `text-to-video` without reference images and `image-to-video` with `input_reference` files |
+| `duration` | yes | number | Preferred duration field. Must match one of `capabilities.supported_seconds` |
+| `seconds` | no | number or string | Compatibility alias for `duration` |
+| `resolution` | model-dependent | string | Preferred output resolution field. Must match `capabilities.supported_sizes`, for example `720p` for Seedance |
+| `size` | no | string | Compatibility alias for `resolution`; legacy models can list exact sizes such as `1280x720` |
+| `client_request_id` | no | string | Client-generated ID for tracing and retry correlation |
+
+Add `Idempotency-Key` on `POST /videos` when retrying task creation. Use the same header value and `client_request_id` for retries of the same logical task, and generate new values for a new task.
 
 The response contains the asynchronous task ID:
 
 ```json
 {
   "id": "video_task_id",
-  "status": "queued"
+  "status": "queued",
+  "outputs": []
 }
 ```
 
@@ -94,10 +130,13 @@ Use `multipart/form-data` when sending reference images. Send each reference ima
 ```bash
 curl https://api.llm7.io/v1/videos \
   -H "Authorization: Bearer $LLM7_API_TOKEN" \
-  -F "model=gemini-veo31" \
+  -H "Idempotency-Key: image-video-demo-001" \
+  -F "model=seedance-2.0-mini" \
+  -F "request_type=image-to-video" \
   -F "prompt=Animate this first frame" \
-  -F "seconds=6" \
-  -F "size=1280x720" \
+  -F "duration=8" \
+  -F "resolution=720p" \
+  -F "client_request_id=image-video-demo-001" \
   -F "input_reference=@first-frame.png"
 ```
 
@@ -106,19 +145,33 @@ For multiple references:
 ```bash
 curl https://api.llm7.io/v1/videos \
   -H "Authorization: Bearer $LLM7_API_TOKEN" \
-  -F "model=gemini-veo31" \
+  -H "Idempotency-Key: multi-reference-demo-001" \
+  -F "model=seedance-2.0-mini" \
+  -F "request_type=image-to-video" \
   -F "prompt=Blend these references into a smooth cinematic shot" \
-  -F "seconds=6" \
-  -F "size=1280x720" \
+  -F "duration=8" \
+  -F "resolution=720p" \
   -F "input_reference=@first-frame.png" \
   -F "input_reference=@style-reference.png"
 ```
 
 Reference image count must not exceed `capabilities.max_reference_images`, and each file must not exceed `capabilities.max_reference_image_bytes`. If `capabilities.requires_reference_image` is `true`, include at least one `input_reference`.
 
+Legacy models such as `gemini-veo31` can continue to expose exact output sizes:
+
+```json
+{
+  "model": "gemini-veo31",
+  "request_type": "text-to-video",
+  "seconds": 6,
+  "size": "1280x720",
+  "prompt": "Waves crashing on rocks, cinematic slow motion"
+}
+```
+
 ## Poll task status
 
-Poll `GET /videos/{id}` until the task reaches `completed` or `failed`.
+Poll `GET /videos/{id}` until the task reaches `completed`, `failed`, or `timeout`.
 
 ```bash
 curl https://api.llm7.io/v1/videos/video_task_id \
@@ -128,7 +181,18 @@ curl https://api.llm7.io/v1/videos/video_task_id \
 ```json
 {
   "id": "video_task_id",
-  "status": "queued"
+  "status": "in_progress",
+  "outputs": []
+}
+```
+
+A completed task includes output URLs:
+
+```json
+{
+  "id": "video_task_id",
+  "status": "completed",
+  "outputs": ["https://storage.example/output/video_task_id.mp4"]
 }
 ```
 
@@ -140,27 +204,30 @@ Possible statuses:
 | `in_progress` | The upstream provider is generating the video |
 | `completed` | The MP4 is ready to download |
 | `failed` | The task failed and the reserved hold is released |
+| `timeout` | The task exceeded the allowed generation time and the reserved hold is released |
 
 Only the same authenticated user who created the task can poll it.
 
 ## Download the completed video
 
-After the task is `completed`, download the MP4 bytes from `GET /videos/{id}/content`.
+After the task is `completed`, download from `GET /videos/{id}/content`.
 
 ```bash
-curl https://api.llm7.io/v1/videos/video_task_id/content \
+curl -L https://api.llm7.io/v1/videos/video_task_id/content \
   -H "Authorization: Bearer $LLM7_API_TOKEN" \
   -o output.mp4
 ```
 
-Successful responses return `Content-Type: video/mp4` with binary MP4 bytes. If the task is not completed yet, the endpoint returns an error.
+Successful responses can return `Content-Type: video/mp4` with binary MP4 bytes. For Atlas-backed tasks, the endpoint can also return an HTTP redirect to the output URL listed in `outputs`; use a redirect-aware client or download the URL directly. If the task is not completed yet, the endpoint returns an error.
 
 ## Validation and billing
 
 Validation is based on the selected model record from `/v1/models`:
 
-- `seconds` must be listed in `capabilities.supported_seconds`.
-- `size`, if provided, must be listed in `capabilities.supported_sizes`.
+- `duration` or `seconds` must be listed in `capabilities.supported_seconds`.
+- `resolution` or `size`, if provided, must be listed in `capabilities.supported_sizes`.
+- For named resolutions, pass the exact supported value such as `720p`; do not convert it to `1280x720` unless that exact size appears in the model metadata.
+- `request_type` must be supported by the selected model route.
 - Reference image count must not exceed `capabilities.max_reference_images`.
 - Each reference image must not exceed `capabilities.max_reference_image_bytes`.
 - If `capabilities.requires_reference_image` is `true`, at least one `input_reference` is required.
@@ -170,7 +237,9 @@ Validation is based on the selected model record from `/v1/models`:
 Video generation is billed asynchronously with a hold. On `POST /v1/videos`, the full cost is reserved:
 
 ```text
-seconds * pricing.price
+seconds * selected_route.public_price_usd_per_second
 ```
+
+Use `pricing.route_prices_usd_per_second` when present and select the route that matches the submitted model, request type, and other route dimensions. Fall back to `seconds * pricing.price` only when the model does not expose `pricing.route_prices_usd_per_second`.
 
 If the video completes successfully, the hold is consumed and the user is charged even if the client never polls the task. If the upstream task fails or task creation is not accepted, the hold is released.

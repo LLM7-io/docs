@@ -55,11 +55,13 @@ Video requests require a valid LLM7 API token and are billed asynchronously from
 | Reference image size | `capabilities.max_reference_image_bytes` |
 | Required reference image | `capabilities.requires_reference_image` |
 
-On task creation, the full estimated cost is reserved as a hold:
+On task creation, the full estimated cost is reserved as a hold. For route-priced video models, select the route that matches the submitted model and request type, then use the route-level public price:
 
 ```text
-seconds * pricing.price
+seconds * selected_route.public_price_usd_per_second
 ```
+
+Fall back to `seconds * pricing.price` only when the model does not expose `pricing.route_prices_usd_per_second`.
 
 The hold is consumed when the task completes successfully and released when upstream generation fails or task creation is not accepted.
 

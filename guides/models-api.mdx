@@ -93,7 +93,11 @@ The endpoint returns an OpenAI-compatible list object:
 </ResponseField>
 
 <ResponseField name="data[].pricing.price" type="number">
-  Per-unit price for non-token billing modes. Video models with `pricing_mode: "second"` use this as the public USD price per generated second.
+  Per-unit price for non-token billing modes. For video models this is the compatible, base, or minimum per-second price; route-level prices in `pricing.route_prices_usd_per_second` can be the source of truth for the final hold.
+</ResponseField>
+
+<ResponseField name="data[].pricing.route_prices_usd_per_second" type="array">
+  Optional route-level video prices. When present, select the route that matches the submitted model, request type, and other route dimensions, then use `selected_route.public_price_usd_per_second` for per-second billing.
 </ResponseField>
 
 <ResponseField name="data[].pricing.currency" type="string">
@@ -113,7 +117,7 @@ The endpoint returns an OpenAI-compatible list object:
 </ResponseField>
 
 <ResponseField name="data[].pricing_mode" type="string">
-  How pricing is calculated. `token` means usage is priced from input and output token counts. `second` means generated media is priced per second using `pricing.price`.
+  How pricing is calculated. `token` means usage is priced from input and output token counts. `second` means generated media is priced per second, using route-level video prices when available and `pricing.price` as the fallback.
 </ResponseField>
 
 <ResponseField name="data[].modalities" type="object">
@@ -145,7 +149,15 @@ The endpoint returns an OpenAI-compatible list object:
 </ResponseField>
 
 <ResponseField name="data[].capabilities" type="object">
-  Endpoint-specific capability metadata. Video models expose fields such as `video_generation`, `video_async`, `supported_seconds`, `supported_sizes`, `max_reference_images`, `max_reference_image_bytes`, and `requires_reference_image`.
+  Endpoint-specific capability metadata. Video models expose fields such as `video_generation`, `video_async`, `supported_seconds`, `supported_sizes`, `max_reference_images`, `max_reference_image_bytes`, `requires_reference_image`, `atlascloud_video`, and `atlascloud_routes`.
+</ResponseField>
+
+<ResponseField name="data[].capabilities.atlascloud_video" type="boolean">
+  `true` when the video model is backed by Atlas routes.
+</ResponseField>
+
+<ResponseField name="data[].capabilities.atlascloud_routes" type="array">
+  Atlas route metadata for video models. Use this with `pricing.route_prices_usd_per_second` to validate supported request types, route choices, and route-priced billing.
 </ResponseField>
 
 ## Access and limits
@@ -179,11 +191,13 @@ charged_cost = max(cost, pricing.minimum_request_price_usd)
 
 Use the live `currency` and `unit` fields instead of assuming all models share the same pricing unit forever.
 
-For video models with `pricing_mode: "second"`, estimate the reserved hold from the requested duration:
+For video models with `pricing_mode: "second"`, estimate the reserved hold from the requested duration. When `pricing.route_prices_usd_per_second` is present, route-level prices are authoritative:
 
 ```txt
-reserved_hold = seconds * pricing.price
+reserved_hold = seconds * selected_route.public_price_usd_per_second
 ```
+
+Fall back to `seconds * pricing.price` only when the model does not include `pricing.route_prices_usd_per_second`.
 
 The hold is consumed when video generation completes successfully and released when upstream generation fails or task creation is not accepted.
 
@@ -193,14 +207,26 @@ Video-capable models are listed with `model_type: "video"` and asynchronous vide
 
 ```json
 {
-  "id": "gemini-veo31",
+  "id": "seedance-2.0-mini",
   "object": "model",
   "model_type": "video",
   "pricing_mode": "second",
   "pricing": {
-    "price": 0.01875,
+    "price": 0.01,
     "currency": "USD",
-    "unit": "second"
+    "unit": "second",
+    "route_prices_usd_per_second": [
+      {
+        "route": "seedance-2.0-mini",
+        "request_type": "text-to-video",
+        "public_price_usd_per_second": 0.01
+      },
+      {
+        "route": "seedance-2.0-fast",
+        "request_type": "text-to-video",
+        "public_price_usd_per_second": 0.02
+      }
+    ]
   },
   "modalities": {
     "input": ["text", "image"],
@@ -209,11 +235,22 @@ Video-capable models are listed with `model_type: "video"` and asynchronous vide
   "capabilities": {
     "video_generation": true,
     "video_async": true,
-    "supported_seconds": [4, 6, 8],
-    "supported_sizes": ["1280x720", "720x1280", "1920x1080"],
+    "supported_seconds": [5, 8],
+    "supported_sizes": ["480p", "720p", "1080p"],
     "max_reference_images": 2,
     "max_reference_image_bytes": 8388608,
-    "requires_reference_image": false
+    "requires_reference_image": false,
+    "atlascloud_video": true,
+    "atlascloud_routes": [
+      {
+        "route": "seedance-2.0-mini",
+        "request_types": ["text-to-video", "image-to-video"]
+      },
+      {
+        "route": "seedance-2.0-fast",
+        "request_types": ["text-to-video", "image-to-video"]
+      }
+    ]
   }
 }
 ```
