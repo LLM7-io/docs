@@ -4,7 +4,7 @@ Documentation for building with the LLM7.io API.
 
 ## LLM7 API token
 
-The examples require an `api_key` value. Use a token from [dash.llm7.io](https://dash.llm7.io/) for higher limits. Anonymous text requests can use `unused` where documented.
+The examples require an API token from [dash.llm7.io](https://dash.llm7.io/).
 
 ## Development
 

@@ -75,7 +75,7 @@ The endpoint returns an OpenAI-compatible list object:
 <ResponseField name="data[].tier" type="string">
   The access tier for the model.
 
-  `turbo` models are fast models available to anonymous and free-token users, subject to lower rate and token limits.
+  `turbo` models are fast models available with free API tokens, subject to the free-tier rate and token limits. Free-token quotas may be reduced without notice based on demand, service capacity, model availability, fair-use calculations, abuse-prevention controls, and other operational factors.
 
   `pro` models are available to Pro subscribers and users with a topped-up balance. Pro subscription allowance is calculated dynamically across the billing period and can be checked in the [dashboard](https://dash.llm7.io/).
 </ResponseField>
@@ -164,12 +164,13 @@ The endpoint returns an OpenAI-compatible list object:
 
 | Access type | Models | Token availability | Rate limits |
 | ----------- | ------ | ------------------ | ----------- |
-| Anonymous | `turbo` models | 500,000 tokens per day | 1 request/second, 10/minute, 60/hour |
-| Free token | `turbo` models | 1,000,000 tokens per day | 2 requests/second, 40/minute, 100/hour |
+| Free token | `turbo` models | 100,000 tokens per day | 1 request/second, 60/minute, 250/hour |
 | Pro subscription | `pro` and `turbo` models | Dynamic Pro allowance for the billing period | Higher paid limits |
 | Topped-up balance | `pro` and `turbo` models | Usage billed from balance | Higher paid limits |
 
 After a Pro subscription allowance is reached, requests can continue from a topped-up balance and are billed from model pricing, token counts, and any per-request minimums.
+
+Free-token quotas may be reduced without notice based on demand, service capacity, model availability, fair-use calculations, abuse-prevention controls, and other operational factors.
 
 <Note>
 You can see current Pro allowance and billing status in the [LLM7.io dashboard](https://dash.llm7.io/).

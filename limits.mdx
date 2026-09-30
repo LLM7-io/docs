@@ -9,8 +9,7 @@ Limits vary by access type, plan, endpoint, and model availability.
 
 | Access type | 1 second | 1 minute | 1 hour |
 | ----------- | -------- | -------- | ------ |
-| Anonymous | 1 | 10 | 60 |
-| Free token | 2 | 40 | 100 |
+| Free token | 1 | 60 | 250 |
 | Pro ($12/mo) | 25 | 1,500 | 15,000 |
 
 ## Token usage availability
@@ -19,13 +18,14 @@ Token usage is counted as input tokens plus output tokens.
 
 | Access type | Token availability |
 | ----------- | ------------------ |
-| Anonymous | 500,000 tokens per 24 hours |
-| Free token | 1,000,000 tokens per 24 hours |
+| Free token | 100,000 tokens per 24 hours |
 | Pro ($12/mo) | Higher dynamically managed token limits than the free tier |
 
 For Pro accounts, token availability is calculated across the monthly billing period based on your usage relative to the percentage of the billing period that has elapsed. You can check current allowance in the [dashboard](https://dash.llm7.io/). After the Pro allowance is reached, requests can continue from a topped-up balance and are billed from the live model pricing.
 
 Pro token availability remains subject to model availability, service capacity, fair-use calculations, and abuse-prevention controls.
+
+Free-token quotas are provided at no charge and may be reduced without notice based on demand, service capacity, model availability, fair-use calculations, abuse-prevention controls, and other operational factors.
 
 Note: Maximum input sizes also depend on your access tier and the specific model context window.
 

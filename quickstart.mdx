@@ -19,14 +19,14 @@ pip install openai
   </Accordion>
 
   <Accordion icon="key" title="Configure the client" defaultOpen>
-    The OpenAI SDK requires an `api_key` value. Use a token from [dash.llm7.io](https://dash.llm7.io/) for higher limits, or use `unused` for anonymous access.
+    The OpenAI SDK requires an API token from [dash.llm7.io](https://dash.llm7.io/).
 
 ```python
 import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Use a https://dash.llm7.io/ token for higher limits.
+    api_key="YOUR_LLM7_API_TOKEN",
 )
 ```
 
@@ -44,7 +44,7 @@ import openai
 
 client = openai.OpenAI(
     base_url="https://api.llm7.io/v1",
-    api_key="unused",  # Use a https://dash.llm7.io/ token for higher limits.
+    api_key="YOUR_LLM7_API_TOKEN",
 )
 
 resp = client.chat.completions.create(
