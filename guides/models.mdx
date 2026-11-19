@@ -4,15 +4,13 @@ description: "Choose model selectors and discover live model options."
 icon: "box"
 ---
 
-<Warning>
-`pro` is available to Pro subscribers and users with a topped-up balance. Model availability changes over time, so prefer selectors unless you need a specific live model ID.
-</Warning>
+Model availability changes over time, so prefer selectors unless you need a specific live model ID.
 
 For most chat applications, use a selector or a live model ID from the Models API:
 
 - `default`: first available general-purpose model
 - `fast`: low-latency model for interactive workloads
-- `pro`: higher-quality paid model with larger limits or advanced capabilities
+- `pro`: higher-quality paid model that may offer advanced capabilities
 - a concrete model ID, such as `gpt-5.4`, when you need to pin routing, behavior, or cost
 
 For image generation, image edits, and video generation, pass a concrete media model ID such as `gpt-image-2` or `gemini-veo31`. Chat selectors such as `default`, `fast`, and `pro` are intended for chat workflows.
@@ -78,11 +76,3 @@ const supportsVideoOutput = model.modalities?.output?.includes("video");
 const supportsTools = model.tools_calling === true;
 const supportsJson = model.json_mode === true;
 ```
-
-## Access tiers
-
-`turbo` models are fast models available with free API tokens. They are a good fit for low-latency and cost-sensitive workloads.
-
-`pro` models are available on Pro subscriptions or paid balances. They may include larger context windows, reasoning, vision, JSON mode, streaming, or tool calling depending on the model record.
-
-See [Limits](/limits) for rate limits and token availability by access type.
